@@ -1,6 +1,23 @@
 - yarn add -D tailwindcss postcss autoprefixer
-- tailwind.config.js (see below)   
+- tailwind.config.js (see below)  
+- tailwind css file (see below
 - "frontdev": "npx concurrently -k -n NEXTJS,TAILWIND -c blue,yellow,orange \"yarn dev\" \"npx tailwindcss -i ./assets/styles/tailwind-import.css -o ./assets/styles/tailwind-compiled.css --watch\"",
+ 
+// CSS FILE
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import './base.css';
+@import 'tailwindcss/utilities';
+
+@layer base {
+    h1 {
+        @apply text-2xl;
+        @apply font-bold;
+    }
+}
  
  
  /** @type {import('tailwindcss').Config} */
