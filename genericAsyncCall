@@ -11,9 +11,10 @@
 // - ?errorCallback(res)
 // - ?switch - status code handler
 
+import chalk from 'chalk';
 import { t } from "i18next";
 import $ from 'jquery';
-import envir from '../env.json';
+import envir from '../../../env.json';
 import { isValid } from "./MyMethods";
 
 
@@ -88,7 +89,6 @@ export default async function genericAsyncPromise(props) {
                                 props.errorCallback(response.json())
                             }
                             console.error(`${response.status}: This request had a backend error, check the server tab and call or use this  \n${props.route}`);
-                            console.log(response.json());
                             break;
                         case 500:
                             if (isValid([props.useAlertsDispatch], [undefined, null])) {
@@ -98,7 +98,6 @@ export default async function genericAsyncPromise(props) {
                                 props.errorCallback(response.json())
                             }
                             console.error(`${response.status}: This request had a SERVER error, please contact support \n${props.route}`);
-                            console.log(response.json());
                             break;
                         default:
                             if (isValid([props.useAlertsDispatch], [undefined, null])) {
@@ -108,7 +107,6 @@ export default async function genericAsyncPromise(props) {
                                 props.errorCallback(response.json())
                             }
                             console.error(`${response.status}: Something went wrong \n${props.route}`);
-                            console.log(response.json());
                             break;
                     }
                 } else {
@@ -117,7 +115,7 @@ export default async function genericAsyncPromise(props) {
             })
             .then(data => {
                 if (!isValid([data], [undefined, null, false])) { return console.warn("No return data") }
-                if (!isValid([props.callback], [undefined, null])) { return console.log("%c 200: no callback " + " - " + props.route, 'background: #222; color: #bada55') }
+                if (!isValid([props.callback], [undefined, null])) { return console.log(chalk.green("200: no callback " + " - " + props.route)) }
                 props.callback(data);
             })
             .catch(error => {
