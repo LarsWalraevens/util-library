@@ -138,7 +138,8 @@ export function handleRequestError(props) {
                 break;
             // ELSE THROW ERROR
             default:
-                throw new Error(`Status of call was unexpected so an error was thrown`)
+                console.error(`Status of call was unexpected so an error was thrown`);
+                break;
         }
     } catch (error) {
         if (props.ref) {
@@ -224,7 +225,8 @@ export function handleRequestSuccess(props) {
                     // ELSE THROW ERROR
                     default:
                         console.error(responseObject);
-                        throw new Error(`Status of api call was unexpected so an error was thrown`);
+                        console.error(`Status of api call was unexpected so an error was thrown`);
+                        break;
                 }
             }
         }
