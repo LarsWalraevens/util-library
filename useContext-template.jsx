@@ -6,6 +6,14 @@ import React, { createContext, useContext, useState } from "react";
 var initFILLINState = false; // initial state
 export const FILLINContext = createContext(initFILLINState);
 
+const reducer = (state, action) => {
+    if (action.type === undefined) { return state }
+    switch (action.type) {
+        default:
+            return state;
+    }
+}
+
 export const useFILLINContextState = (useReactState) => {
     const [FILLINState, setFILLINState] = useContext(FILLINContext);
     if (useReactState) {
