@@ -1,9 +1,10 @@
 - yarn add -D tailwindcss postcss autoprefixer
 - tailwind.config.js (see below)  
-- tailwind css file (see below
+- tailwind css file (see below)
+// PACKAGE.JSON SCRIPT
 - "frontdev": "npx concurrently -k -n NEXTJS,TAILWIND -c blue,yellow,orange \"yarn dev\" \"npx tailwindcss -i ./assets/styles/tailwind-import.css -o ./assets/styles/tailwind-compiled.css --watch\"",
  
-// CSS FILE
+// CSS FILE (./assets/styles/tailwind-import.css)
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,7 +20,7 @@
     }
 }
  
- 
+ // TAILWIND CONFIG (tailwind.config.js)
  /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: ["./pages/**/*.{html,js,tsx,ts}", "./components/**/*.{html,js,tsx,ts}"],
@@ -95,8 +96,3 @@ module.exports = {
     },
     plugins: [],
 }
-
-   
-   
-   
- 

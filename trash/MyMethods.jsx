@@ -28,7 +28,6 @@ export function postLink(link) {
 // remove item from url parameter
 export function removeParam(key, sourceURL) {
     try {
-
         var rtn = sourceURL.split("?")[0],
             param,
             params_arr = [],
@@ -47,7 +46,7 @@ export function removeParam(key, sourceURL) {
         return rtn;
     }
     catch (error) {
-
+        console.error(error)
     }
 }
 
@@ -101,7 +100,8 @@ export function isValid(toCheck, checkFor) {
     }
 }
 
-// HANDLE OUTSIDE CLICK 
+// HANDLE OUTSIDE CLICK  
+// example; useOutsideAlerter(wrapperRef, () => setShowOptions(false));
 export function useOutsideAlerter(ref, onChange) {
     useEffect(() => {
         function handleClickOutside(event) {

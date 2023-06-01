@@ -15,7 +15,7 @@ import chalk from 'chalk';
 import { t } from "i18next";
 import $ from 'jquery';
 import envir from '../../../env.json';
-import { isValid } from "./MyMethods";
+import { isValid } from "../MyMethods";
 
 
 
