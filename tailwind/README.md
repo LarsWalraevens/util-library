@@ -92,4 +92,13 @@ Create a CSS file (e.g., tailwind-import.css) in your project's styles directory
 ```
 You can import additional CSS files or customize the styles as needed.
 
+4. Add a tailwind watcher for changes to compile
+
+```bash
+{
+  // package.json script
+ "frontdev": "npx concurrently -k -n NEXTJS,TAILWIND -c blue,yellow,orange \"yarn dev\" \"npx tailwindcss -i ./assets/styles/tailwind-import.css -o ./assets/styles/tailwind-compiled.css --watch\"",
+}
+```
+
 ## That's it! You've successfully set up Tailwind CSS in your project. Happy coding!
