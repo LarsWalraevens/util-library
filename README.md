@@ -1,10 +1,10 @@
-# About repo
+## About repo
 
 This repository serves as a collection of handy and reusable methods that I find useful in my projects.
 
 ## Organization
 
-The methods in this repository are organized into folders based on the main "needed" package. Each folder contains related methods that are associated with a specific package(s) or library(s).
+The methods in this repository are organized into folders based on the main required package. Each folder contains related methods that are associated with a specific package(s) or library(s).
 
 ## Usage
 
