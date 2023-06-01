@@ -1,68 +1,72 @@
 'use strict';
 
-const gulp = require('gulp');
-const browserSync = require('browser-sync').create();
-const sass = require('gulp-sass')(require('sass'));
-const autoprefixer = require('gulp-autoprefixer');
-const globbing = require('gulp-css-globbing');
-const cleanCSS = require('gulp-clean-css');
-
-var iconfont = require('gulp-iconfont');
-var iconfontCss = require('gulp-iconfont-css');
+// Required npm packages
+const gulp = require('gulp'); // Gulp task runner
+const browserSync = require('browser-sync').create(); // Live browser reloading
+const sass = require('gulp-sass')(require('sass')); // Sass compiler
+const autoprefixer = require('gulp-autoprefixer'); // CSS autoprefixer
+const globbing = require('gulp-css-globbing'); // CSS globbing
+const cleanCSS = require('gulp-clean-css'); // CSS minification
+const iconfont = require('gulp-iconfont'); // Icon font generation
+const iconfontCss = require('gulp-iconfont-css'); // Icon font CSS generation
 
 // CSS task
 function sass2css() {
     return gulp
-        .src('./sass/*.scss')
+        .src('./sass/*.scss') // Source Sass files
         .pipe(globbing({
             extensions: ['.scss']
-        }))
-        .pipe(sass())
-        .pipe(autoprefixer())
-        .pipe(cleanCSS())
-        .pipe(gulp.dest('./sass'))
-        .pipe(browserSync.stream())
+        })) // CSS globbing
+        .pipe(sass()) // Compile Sass to CSS
+        .pipe(autoprefixer()) // Add vendor prefixes to CSS
+        .pipe(cleanCSS()) // Minify CSS
+        .pipe(gulp.dest('./sass')) // Output directory for compiled CSS
+        .pipe(browserSync.stream()); // Inject changes into the browser
 }
 
-//watch icons
+// Icon font task
 function watchIcons() {
     return gulp
-        .src(['./assets/icons/*.svg'])
+        .src(['./assets/icons/*.svg']) // Source SVG icons
         .pipe(iconfontCss({
             path: './assets/icons/_template.scss',
             fontName: 'icons',
             targetPath: '../../sass/01_fundaments/_icons.scss',
             fontPath: './assets/fonts/'
-        }))
+        })) // Generate icon font CSS file
         .pipe(iconfont({
             fontName: 'icons',
             formats: ['ttf', 'eot', 'woff', 'svg', 'woff2'],
             normalize: true,
             fontHeight: 128,
             descent: 24
-        }))
-        .pipe(gulp.dest('./assets/fonts/'))
-        .pipe(browserSync.stream());
+        })) // Generate icon font files
+        .pipe(gulp.dest('./assets/fonts/')) // Output directory for generated font files
+        .pipe(browserSync.stream()); // Inject changes into the browser
 }
 
-// Watch files
+// Watch files for changes and run corresponding tasks
 function watchFiles() {
+    // Initialize BrowserSync server
     browserSync.init({
         open: false,
         server: "./sass/**/*.scss",
         port: 3010
     });
 
+    // Watch Sass files and run sass2css task on change
     gulp
         .watch("./sass/**/*.scss", sass2css)
         .on('change', browserSync.reload);
 
+    // Watch icon SVG files and run watchIcons task on change
     gulp
         .watch("./assets/icons/*.svg", watchIcons)
         .on('change', browserSync.reload);
 }
 
+// Create main task with series of tasks
 const watch = gulp.series(watchFiles);
 
-// export tasks
+// Export tasks
 exports.default = watch;

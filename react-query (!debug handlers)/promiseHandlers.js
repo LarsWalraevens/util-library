@@ -7,7 +7,7 @@ HOW IT WORKS;
 - used packages: axios, react-query, react-toastify, chalk
 - when you use react-query, you can use these handlers like this;
          useQuery({
-             queryFn: ()=> axios.get("your_call");
+             queryFn: ()=> axios.get("yourCall");
              queryKey: ["yourCall"],
              onSuccess: (res) => handleRequestSuccess({response: res}), // -> MY HANDLER 
              onError: (res) => handleRequestError({response: res}) // -> MY HANDLER 
@@ -21,9 +21,10 @@ HOW IT WORKS;
 
 import chalk from 'chalk';
 import { toast } from 'react-toastify';
-// import { LOG_SEVERITY } from '../data/enums';
 
-// handler for common HTTPS status errors - used for debugging and showing general alerts
+const project = "Project name"
+
+// Handles status codes - gives alerts & error logs depending on status code
 // PROPS
 // - t -> translations (i18next)
 // - status
@@ -112,7 +113,7 @@ export function handleDebugLogsAndAlerts(props) {
     }
 }
 
-// Generally handles the following of a request: status, error logs, alerts
+// Error request handler - this handler does not use regular callback method (use customCallback prop to do stuff)
 // PROPS
 // - t -> translations (i18next)
 // - response
@@ -142,9 +143,9 @@ export function handleRequestError(props) {
 
         console.log(chalk.bold(`🛑 ${status} (${apiStatus || "Unknown"}):`), getSimpleApiRoute(route));
 
-        // status can be string or something unexpected - if so then use the status code given by backend
+        // status can be string or something unexpected (example; axios timeout error) - if so then use the API status code
         if (status === undefined || typeof status !== "number") {
-            if (!response.response || !response.response.status) { return console.log(chalk.red("handleError: unexpected status errors")) }
+            if (!response.response || !response.response.status) { return console.log(chalk.red("handleRequestError: unexpected status errors")) }
             status = response.response.status
         }
 
@@ -178,25 +179,25 @@ export function handleRequestError(props) {
         });
     } catch (error) {
         if (error) {
-            throw new Error(`Something went wrong in the handleRequestError method - \n${error}`);
+            throw new Error(`Caught - Something went wrong in the handleRequestError method - \n${error}`);
         } else {
             console.log(error);
-            throw new Error(`Something went wrong in the handleRequestError method without given error message (^)`);
+            throw new Error(`Caught - Something went wrong in the handleRequestError method without given error message (^)`);
         }
     }
 }
 
-// Generally handles the following of a request: status, error logs, alerts, does something with data requested ("callback"/"customCallback")
+// Success request handler - do something with data (callback/customCallback)
 // PROPS
 // - t -> translations (i18next)
 // - response
 // - isSubmit?
 // - hasAlert?
 // - callback -> function that does something with data
-// - customCallback? - do stuff in handleError 
+// - customCallback? - do stuff besides callback function - usually handles specific status codes 
 export function handleRequestSuccess(props) {
     try {
-        const { response, hasAlert, isSubmit, callback, customCallback, submitMessage } = props;
+        const { t, response, hasAlert, isSubmit, callback, customCallback, submitMessage } = props;
         let route = null;
         let status = null;
 
@@ -238,10 +239,9 @@ export function handleRequestSuccess(props) {
 
         console.log(chalk.bold(`✅ ${status} (${apiStatus}):`), getSimpleApiRoute(route));
 
-        // Give https status to handler it shows general alerts
-        // We handle api status & logs below (because it depends on the app and is custom stuff) so we hide logs here
+        // Only want to use this for the 200 (ok) default alert - debug logs are better handled afterwards
         handleDebugLogsAndAlerts({
-            t: props.t,
+            t,
             status,
             route,
             response,
@@ -251,10 +251,7 @@ export function handleRequestSuccess(props) {
             hideDebugLogs: true,
         });
 
-        // !!! HANDLE ALL ACCEPTABLE API STATUSES & DEBUG LOGGING THAT ARE 200-299 -> else it will throw an error
-        // in short (for react-query):
-        // - for isSuccess means the following cases is true 
-        // - for onSuccess means the following cases is true 
+        // HANDLE ALL ACCEPTABLE API STATUSES & DEBUG LOGGING (200-299)
         let methodLog = "";
         if (typeof callback === 'function') {
             if (status === 298) {
@@ -263,6 +260,7 @@ export function handleRequestSuccess(props) {
                 responseObject.log = methodLog;
                 callback();
             } else {
+                // !! using API STATUS here for more custom logging!
                 switch (apiStatus) {
                     case 200:
                         // OK - do callback in success handler

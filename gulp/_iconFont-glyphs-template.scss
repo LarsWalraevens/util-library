@@ -3,11 +3,8 @@
 
 $icon-font-token: '{{icon-font-token}}';
 
-// .<%= cssClass %>:after,
-// .<%= cssClass %>:before,
+// Base CSS rules for icon classes
 [class^='icon-']:before,
-// [class^='icon-']:after,
-// [class*=' icon-']:after,
 [class*=' icon-']:before {
     display: inline-block;
     font-family: '<%= fontName %>';
@@ -21,9 +18,8 @@ $icon-font-token: '{{icon-font-token}}';
     line-height: 1;
 }
 
-// BEFORE
 <%=glyphs.map(function(glyph) {
-        return '.' + cssClass + '-' + glyph.fileName + ':before'
+        return '.<%=cssClass %>-<%=glyph.fileName %>:before'; // Selector for individual icon classes
 
     }).join(',\n') %> {
     display: inline-block;
@@ -42,15 +38,15 @@ $icon-font-token: '{{icon-font-token}}';
 
 <% _.each(glyphs, function(glyph) {
         %> .<%=cssClass %>-<%=glyph.fileName %>:before {
-            content: '\<%= glyph.codePoint %>' !important;
+            // Individual icon class with content code
+            content: "<%= glyph.codePoint %>" !important;
         }
 
         <%
     });
-%> // AFTER
 
-<%=glyphs.map(function(glyph) {
-        return '.after-' + cssClass + '-' + glyph.fileName + ':after'
+%><%=glyphs.map(function(glyph) {
+        return '.after-' + cssClass + '-' + glyph.fileName + ':after'; // Selector for pseudo-elements with content code
 
     }).join(',\n') %> {
     display: inline-block;
@@ -69,7 +65,8 @@ $icon-font-token: '{{icon-font-token}}';
 
 <% _.each(glyphs, function(glyph) {
         %> .after-<%=cssClass %>-<%=glyph.fileName %>:after {
-            content: '\<%= glyph.codePoint %>' !important;
+            // Pseudo-element with content code
+            content: "<%= glyph.codePoint %>" !important;
         }
 
         <%
