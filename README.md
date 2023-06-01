@@ -1,6 +1,6 @@
 ## About repo
 
-This repository serves as a collection of handy and reusable methods that I find useful in my projects. You might find something useful in here that you can use.
+This repository serves as a collection of handy and reusable methods/examples/templates that I find useful to use in my projects. You might find something useful in here that you can use.
 
 ## Organization
 
