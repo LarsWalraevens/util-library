@@ -1,10 +1,10 @@
-// load translations from backend
+// load translations that need to come from a backend
 const I18NextHttpBackend = require('i18next-http-backend/cjs');
 const envir = require("./env.json");
 
 // { key: value, ... }
-const devPath = "https://share.wisepeople.be/assets/public/translations/home/dev_{{lng}}.json";
-const prodPath = "https://share.wisepeople.be/assets/public/translations/home/{{lng}}.json";
+const devPath = "https://your-api.com/assets/public/translations/home/dev_{{lng}}.json";
+const prodPath = "https://your-api.com/assets/public/translations/home/{{lng}}.json";
 
 module.exports = {
     i18n: {

@@ -1,5 +1,5 @@
-// easy to use method to change an item in a complex object
-const editFormItem = (key, value) => setProfileFormObject(
+// example method to change an item in a complex object usestate
+const editStateItem = (key, value) => setMyState(
     produce((draft) => {
         draft[key] = value;
     })

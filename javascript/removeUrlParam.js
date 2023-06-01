@@ -1,4 +1,7 @@
 // remove item from url parameter
+// key = urlParam item to remove
+// sourceUrl = myurl.com/?param1=item&param2=item2
+
 export function removeParam(key, sourceURL) {
     try {
         var rtn = sourceURL.split("?")[0],

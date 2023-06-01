@@ -10,7 +10,7 @@ export const getStaticProps = async ({ locale }) => ({
 })
 
 // [dynamic page]
-const getStaticProps = async (ctx) => {
+/* export */ const getStaticProps = async (ctx) => {
     const locale = ctx.locale || i18nextConfig.i18n.defaultLocale;
     const translations = await serverSideTranslations(locale, ["translation"]);
 

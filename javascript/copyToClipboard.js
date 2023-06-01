@@ -1,4 +1,3 @@
-// HANDLE COPY ITEM/TEXT
 export function textToClipboard(text) {
     var dummy = document.createElement("textarea");
     document.body.appendChild(dummy);

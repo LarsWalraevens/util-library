@@ -1,5 +1,4 @@
-
-// HOOK THAT HANDLEs OUTSIDE CLICK  
+// HOOK THAT HANDLES OUTSIDE CLICK  
 // example; useOutsideAlerter(wrapperRef, () => setShowOptions(false));
 export function useOutsideAlerter(ref, onChange) {
     useEffect(() => {

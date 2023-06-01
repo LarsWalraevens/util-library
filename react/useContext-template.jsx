@@ -1,8 +1,6 @@
+// Example template of useContext api
 import React, { createContext, useContext, useState } from "react";
 
-// null -> loading
-// false -> failed
-// x -> correct
 var initFILLINState = false; // initial state
 export const FILLINContext = createContext(initFILLINState);
 
