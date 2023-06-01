@@ -9,7 +9,7 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'wiseassets.blob.core.windows.net',
+                hostname: 'yourCdn.com',
                 port: '',
             },
         ],

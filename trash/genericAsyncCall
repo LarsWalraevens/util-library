@@ -35,7 +35,7 @@ export default async function genericAsyncPromise(props) {
     var errorConnection = t("home_extra_general_error");
     var errorSomething = t("home_extra_general_error2");
     var logChanges = t("home_extra_save_success");
-    var apiRoute = envir.Variables.WiseHomeFunctionApi;
+    var apiRoute = apiroute;
     try {
         if (props.event !== undefined) {
             props.event.preventDefault();
@@ -50,14 +50,14 @@ export default async function genericAsyncPromise(props) {
             requestOptions = {
                 method: "GET",
                 headers: {
-                    'Content-Type': 'application/json', "x-functions-key": envir.Variables.WiseApiKey
+                    'Content-Type': 'application/json', "x-functions-key": "yourapiroute"
                 },
             };
         } else {
             requestOptions = {
                 method: props.method.toUpperCase(),
                 headers: {
-                    'Content-Type': 'application/json', "x-functions-key": envir.Variables.WiseApiKey
+                    'Content-Type': 'application/json', "x-functions-key": "yourapiroute"
                 },
                 body: JSON.stringify(props.body),
             };

@@ -33,7 +33,7 @@ export default async function genericAsyncPromise(props: GenericPromiseProps) {
     var errorConnection = "A connection error occured, please try again";
     var errorSomething = "Something went wrong, please try again";
     var logChanges = "Successfully made changes";
-    var apiRoute = envir.Variables.WiseOfficeFunctionApi;
+    var apiRoute = "yourapiroute";
     try {
         if (props.event !== undefined) {
             props.event.preventDefault();
