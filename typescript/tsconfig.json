@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "allowJs": true, /*  Allow regular js files in project */
+        "skipLibCheck": true, /* Skip type checking all .d.ts files -> improve complition time and evades type errors */
+        "esModuleInterop": true, /* Esier imports ex. import React from react */
+        "allowSyntheticDefaultImports": true, /* allow default export from modules */
+        "strict": true, /* Enable all strict type-checking options - best practice */
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true, /* need a required break, return, or throw */
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true, /* Checks JSON files structer and generate typings automatically */
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx"
+    },
+    "include": [
+        "src"
+    ]
+}

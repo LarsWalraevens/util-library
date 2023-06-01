@@ -19,7 +19,7 @@ export function handleCompressedData(res) {
         // var item = JSON.parse(pako.inflate(res.data, { to: 'string' }))
         // var item = ungzip(res.data, { windowBits: '16+MAX_WBITS' })
         var jsonData = (JSON.parse(strData));
-        console.log(jsonData)
+        console.log({ compressedData: jsonData })
         return jsonData;
 
     } catch (error) {

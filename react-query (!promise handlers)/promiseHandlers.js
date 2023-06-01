@@ -261,7 +261,6 @@ export function handleRequestSuccess(props) {
                 // OK but - result data is compressed - will need uncompressing in callback
                 methodLog = "COMPRESSED - Callback found & was triggered";
                 responseObject.log = methodLog;
-                console.log(responseObject);
                 callback();
             } else {
                 switch (apiStatus) {
@@ -292,9 +291,14 @@ export function handleRequestSuccess(props) {
                 methodLog = "No main callback found (found custom)";
                 responseObject.log = methodLog;
             } else {
-                methodLog = "Callback not found";
+                methodLog = "No callback / customCallback used";
                 responseObject.log = methodLog;
             }
+        }
+
+        // do custom callback when available/given
+        if (customCallback !== undefined || typeof (customCallback) === 'function') {
+            customCallback();
         }
 
         console.log(responseObject);
