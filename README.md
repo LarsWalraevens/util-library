@@ -1,4 +1,4 @@
-# My Personal Repository
+# About repo
 
 This repository serves as a collection of handy and reusable methods that I find useful in my projects.
 
