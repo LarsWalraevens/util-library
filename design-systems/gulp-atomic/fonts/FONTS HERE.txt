@@ -1,0 +1,8 @@
+# ADD YOUR FONT FILES
+
+// EXAMPLE SCSS
+ @font-face {
+    font-family: tilium;
+    src: url('../fonts/TitilliumWeb-Bold.ttf');
+    font-weight: bold;
+  }

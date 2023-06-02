@@ -1,0 +1,87 @@
+/*
+
+This file should contain the global styles and base styles that are applied throughout the entire application
+
+*/
+
+
+* {
+    box-sizing: border-box;
+    font-family: var(--font--regular), sans-serif;
+}
+
+html {
+    font-family: var(--font--regular), sans-serif;
+    height: 100%;
+    overflow: auto;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    /* iOS Safari */
+    -webkit-user-select: none;
+    /* Safari */
+    -khtml-user-select: none;
+    /* Konqueror HTML */
+    -moz-user-select: none;
+    /* Old versions of Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+
+// ############## SCROLLBAR ##############
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+// BACKGROUND SCROLLBAR
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 5px 5px 0;
+}
+
+// ACTUAL SCROLLBAR
+::-webkit-scrollbar-thumb {
+    padding: 0 2px;
+    border-radius: 2px;
+    background-color: #888;
+    border: 3px solid #888;
+
+    &:hover {
+        border: 3px solid var(--color--lime);
+        background-color: var(--color--lime);
+    }
+}
+
+// #######################################
+
+.cursor-default {
+    cursor: default;
+}
+
+.cursor-pointer {
+
+    &:hover,
+    &:focus {
+        cursor: pointer !important;
+
+        >div {
+            cursor: pointer !important;
+        }
+    }
+}
+
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
+.text-center {
+    text-align: center;
+}

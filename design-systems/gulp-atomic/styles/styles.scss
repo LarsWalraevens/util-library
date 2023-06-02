@@ -1,0 +1,17 @@
+// colors and other variables
+@import '01_fundaments/fundaments.scss';
+
+// simple element tags
+@import '02_atoms/**/*.scss';
+
+// bigger elements
+@import '03_molecules/**/*.scss';
+
+// components of pages
+@import '04_organisms/**/**/*.scss';
+
+// modules or layouts in different states
+@import '05_layouts/**/*.scss';
+
+// page level stuff
+@import '06_buckets/**/*.scss';

@@ -1,0 +1,61 @@
+/*
+
+Layouts (templates): Templates provide a higher-level view of the UI, showcasing the layout and arrangement of organisms. They define the structure of a page or a section. 
+Examples of templates include; 
+a homepage layout, a product listing page layout, or a blog post layout.
+
+*/
+
+.container {
+    @include container($gl-width);
+
+    @include bp(md) {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+.container-sm {
+    @include container(500px);
+
+    @include bp(md) {
+        width: unset;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+.container-xl {
+    max-width: $xl-width;
+
+    .bg-secondary {
+        max-width: $xl-width;
+    }
+}
+
+.container-page {
+    padding-bottom: 180px;
+    position: relative;
+    min-height: 70vh;
+    // FOOTER HEIGHT
+
+    @include bp(md) {
+        padding-bottom: 200px;
+    }
+}
+
+
+.page-content {
+
+    // header
+    @include bp(lg) {
+        margin-top: 70px;
+        padding-top: var(--gap--8);
+        padding-bottom: var(--gap--8);
+    }
+
+    // content
+    padding-top: var(--gap--8);
+    padding-bottom: var(--gap--8);
+    min-height: 50vh;
+}

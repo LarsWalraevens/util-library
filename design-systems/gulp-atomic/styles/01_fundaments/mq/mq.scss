@@ -1,0 +1,114 @@
+ // Icon-font mixin that you can use in sass files
+ // example: @include icon(iconName, 'before');
+ @mixin icon($icon, $position: 'before', $replace: false, $breakpoint: false) {
+   @if $replace {
+     font-size: 0;
+   }
+
+   @if $position ==before {
+
+     &:#{$position} {
+       @extend .icon-#{$icon} !optional;
+       font-family: "icons";
+       font-size: 18px;
+       font-style: normal;
+       font-weight: normal;
+       font-variant: normal;
+       text-transform: none;
+       line-height: 1;
+
+       @if $replace and $breakpoint ==false {
+         font-size: 20px;
+       }
+
+       @else if $breakpoint {
+         font-size: 0;
+       }
+
+       @content;
+     }
+   }
+
+   @if $position ==after {
+     &:#{$position} {
+       @extend .after-icon-#{$icon} !optional;
+       font-family: "icons";
+       font-size: 18px;
+       font-style: normal;
+       font-weight: normal;
+       font-variant: normal;
+       text-transform: none;
+       line-height: 1;
+
+       @if $replace and $breakpoint ==false {
+         font-size: 20px;
+       }
+
+       @else if $breakpoint {
+         font-size: 0;
+       }
+
+       @content;
+     }
+   }
+ }
+
+ // Breakpoint mixin to handle responsiveness
+ // example; @include bp(md) { your css properties }
+ @mixin bp($point, $limiter: min) {
+   @if $point ==sm {
+     @media only screen and (max-width: ($sm-width)) {
+       @content;
+     }
+   }
+
+   @else if $point ==md {
+     @media only screen and (max-width: ($md-width)) {
+       @content;
+     }
+   }
+
+   @else if $point ==lg {
+     @media only screen and (max-width: ($lg-width)) {
+       @content;
+     }
+   }
+
+   @else if $point ==xlg {
+     @media only screen and (max-width: ($xlg-width)) {
+       @content;
+     }
+   }
+
+   @else if $point ==xl {
+     @media only screen and (max-width: $xl-width) {
+       @content;
+     }
+   }
+
+   @else if $point ==xxl {
+     @media only screen and (max-width: $xxl-width) {
+       @content;
+     }
+   }
+
+   @else {
+     @content;
+   }
+ }
+
+ // Add global padding to child elements in containers
+ // example; @include gl-padding;
+ @mixin gl-padding {
+   padding-left: $gl-padding;
+   padding-right: $gl-padding;
+ }
+
+ // Add container properties for main tag components
+ // example; @include container($gl-width);
+ @mixin container($width) {
+   margin: auto;
+   max-width: $width;
+   padding-left: $gl-padding;
+   padding-right: $gl-padding;
+ }

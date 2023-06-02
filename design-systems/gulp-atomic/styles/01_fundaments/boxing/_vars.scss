@@ -1,0 +1,28 @@
+$gaps: 25;
+$gap: 4px;
+
+$sections: (
+    1: 300px,
+    2: 400px,
+    3: 536px,
+    4: 620px,
+    5: 800px,
+    6: 980px,
+    7: 1024px,
+    8: 1140px,
+    9: 1340px,
+    10: 2000px,
+);
+
+// GLOBAL VARS FOR MEDIA QUERIES
+$sm-width: 392px;
+$md-width: 692px;
+$lg-width: 902px;
+$xlg-width: 1202px;
+$xl-width: 1460px;
+$xxl-width: 1960px;
+
+// GLOBAL VARS FOR CONTAINERS
+$gl-padding: 2rem;
+$gl-width: $xl-width;
+$gl-width-small: $lg-width;

@@ -1,0 +1,60 @@
+// Your font-family options
+$font--regular : "Poppins",
+sans-serif;
+$font--secondary : "Tilium",
+sans-serif;
+
+// Font sizes - used to generate classes in ./fundaments
+$fontSizes: (
+  h1: 24px,
+  h2: 22px,
+  h3: 20px,
+  h4: 20px,
+
+  xsmall: 14px,
+  small: 16px,
+  regular: 18px,
+  medium: 20px,
+  large: 25px,
+  xlarge: 30px,
+  xxlarge: 35px,
+);
+
+// Font weights - used to generate classes in ./fundaments
+$fontWeights: (
+  'bold': 700,
+  'semi-bold': 600,
+  'medium': 500,
+  'regular': 400,
+);
+
+// Your icons-font
+@font-face {
+  font-family: "icons";
+  src: url('../fonts/icons.eot');
+  src: url('../fonts/icons.eot?#iefix') format('eot'),
+    url('../fonts/icons.ttf') format('truetype'),
+    url('../fonts/icons.svg#somename') format('svg');
+}
+
+// Simple font import example
+@font-face {
+  font-family: "Poppins";
+  src: url('../fonts/Poppins-Regular.ttf');
+  font-weight: 'regular';
+  font-style: 'normal';
+}
+
+// More complex import styles
+$font-path: '../fonts/family';
+
+@mixin font-face($name, $font-weight, $font-style, $foldername, $filename) {
+  @font-face {
+    font-family: $name;
+    src: url('#{$font-path}/#{$foldername}/#{$filename}-#{$font-weight}.woff') format('woff');
+    font-weight: $font-weight;
+    font-style: $font-style;
+  }
+}
+
+@include font-face('Poppins', 'regular', 'normal', 'Poppins', 'Poppins');

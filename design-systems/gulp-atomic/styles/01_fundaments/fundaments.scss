@@ -1,0 +1,171 @@
+@import './boxing/vars';
+@import './colors/vars';
+@import './mq/mq';
+@import './typography/vars';
+@import '_global-styles.scss';
+@import '_icons.scss';
+
+:root {
+  // Create font-family variables
+  --font--regular: #{$font--regular},
+  sans-serif;
+  --font--special: #{$font--secondary},
+  sans-serif;
+
+
+  // Create color classes
+  @each $name,
+  $color in $colors {
+    --color--#{$name}: #{$color};
+
+    .color-#{$name} {
+      color: var(--color--#{$name});
+    }
+
+    .color-#{$name}:before {
+      color: var(--color--#{$name});
+    }
+
+    .bg-#{$name} {
+      background-color: var(--color--#{$name});
+    }
+  }
+
+  // Create font-size classes
+  @each $name,
+  $fontSize in $fontSizes {
+    --fs--#{$name}: #{$fontSize};
+
+    .fs-#{$name} {
+      font-size: var(--fs--#{$name});
+      ;
+    }
+
+    .fs-#{$name}:before {
+      font-size: var(--fs--#{$name});
+      ;
+    }
+  }
+
+  // Create font-weight classes
+  @each $name,
+  $weight in $fontWeights {
+    --fw--#{$name}: #{$weight};
+
+    .fw-#{$name} {
+      font-weight: var(--fw--#{$name});
+      ;
+    }
+  }
+
+  // Create gap variables
+  @for $i from 0 to $gaps {
+    --gap--#{$i}: #{$i * $gap};
+  }
+}
+
+// Create margin & padding variables
+@for $i from 0 to $gaps {
+  .mt-#{$i} {
+    margin-top: var(--gap--#{$i});
+  }
+
+  .mb-#{$i} {
+    margin-bottom: var(--gap--#{$i});
+  }
+
+  .ml-#{$i} {
+    margin-left: var(--gap--#{$i});
+  }
+
+  .mr-#{$i} {
+    margin-right: var(--gap--#{$i});
+  }
+
+  .mx-#{$i} {
+    margin-left: var(--gap--#{$i});
+    margin-right: var(--gap--#{$i});
+  }
+
+  .my-#{$i} {
+    margin-bottom: var(--gap--#{$i});
+    margin-top: var(--gap--#{$i});
+  }
+
+  .pt-#{$i} {
+    padding-top: var(--gap--#{$i});
+  }
+
+  .pb-#{$i} {
+    padding-bottom: var(--gap--#{$i});
+  }
+
+  .pl-#{$i} {
+    padding-left: var(--gap--#{$i});
+  }
+
+  .pr-#{$i} {
+    padding-right: var(--gap--#{$i});
+  }
+
+  .px-#{$i} {
+    padding-left: var(--gap--#{$i});
+    padding-right: var(--gap--#{$i});
+  }
+
+  .py-#{$i} {
+    padding-bottom: var(--gap--#{$i});
+    padding-top: var(--gap--#{$i});
+  }
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.m-auto {
+  margin: auto;
+}
+
+// Responsive classes
+.sm-only {
+  display: none !important;
+
+  @include bp(sm) {
+    display: unset !important;
+  }
+}
+
+.md-only {
+  display: none !important;
+
+  @include bp(md) {
+    display: unset !important;
+  }
+}
+
+.lg-only {
+  display: none !important;
+
+  @include bp(lg) {
+    display: unset !important;
+  }
+}
+
+.xlg-only {
+  display: none !important;
+
+  @include bp(xlg) {
+    display: unset !important;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+@import './boxing/boxing';
+@import './colors/colors';
+@import './mq/mq';
+@import './typography/typography';
