@@ -6,69 +6,34 @@ $icon-font-token: '{{icon-font-token}}';
 // Base CSS rules for icon classes
 [class^='icon-']:before,
 [class*=' icon-']:before {
-    display: inline-block;
-    font-family: '<%= fontName %>';
-    speak: none;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    text-decoration: none;
-    line-height: 1;
+  display: inline-block;
+  font-family: '<%= fontName %>';
+  speak: none;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  text-decoration: none;
+  line-height: 1;
 }
 
-<%=glyphs.map(function(glyph) {
-        return '.<%=cssClass %>-<%=glyph.fileName %>:before'; // Selector for individual icon classes
+<% for (var i=0; i < glyphs.length; i++) {
+  %>.<%=cssClass %>-<%=glyphs[i].fileName %>:before {
+    /* Individual icon class with content code */
+    content: '\<%= String.fromCharCode(parseInt(glyphs[i].codePoint, 16)) %>';
+  }
 
-    }).join(',\n') %> {
-    display: inline-block;
-    font-family: '<%= fontName %>';
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    line-height: 1;
-    text-decoration: inherit;
-    text-rendering: optimizeLegibility;
-    text-transform: none;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    font-smoothing: antialiased;
+  <%
 }
 
-<% _.each(glyphs, function(glyph) {
-        %> .<%=cssClass %>-<%=glyph.fileName %>:before {
-            // Individual icon class with content code
-            content: "<%= glyph.codePoint %>" !important;
-        }
+%><% for (var i=0; i < glyphs.length; i++) {
+  %>.after-<%=cssClass %>-<%=glyphs[i].fileName %>:after {
+    /* Pseudo-element with content code */
+    content: '\<%= String.fromCharCode(parseInt(glyphs[i].codePoint, 16)) %>';
+  }
 
-        <%
-    });
-
-%><%=glyphs.map(function(glyph) {
-        return '.after-' + cssClass + '-' + glyph.fileName + ':after'; // Selector for pseudo-elements with content code
-
-    }).join(',\n') %> {
-    display: inline-block;
-    font-family: '<%= fontName %>';
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    line-height: 1;
-    text-decoration: inherit;
-    text-rendering: optimizeLegibility;
-    text-transform: none;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    font-smoothing: antialiased;
+  <%
 }
 
-<% _.each(glyphs, function(glyph) {
-        %> .after-<%=cssClass %>-<%=glyph.fileName %>:after {
-            // Pseudo-element with content code
-            content: "<%= glyph.codePoint %>" !important;
-        }
-
-        <%
-    });
 %>
