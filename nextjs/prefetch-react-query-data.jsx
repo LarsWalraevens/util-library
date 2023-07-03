@@ -23,7 +23,7 @@ export default function PokemonPage() {
             {
                 isLoading ? "Loading" :
                     isError ? "Error" :
-                        `Data loaded ${JSON.parse(data)}`
+                        `Data loaded ${JSON.stringify(data)}`
             }
         </div>
     );
