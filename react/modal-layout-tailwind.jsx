@@ -1,4 +1,4 @@
-// standard modal/overlay layout component created with typescript
+// standard modal/overlay layout component created with tailwind
 
 export default function ModalLayout(props) {
     return <>
