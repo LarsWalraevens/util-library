@@ -1,6 +1,6 @@
 
-const project = "WiSE Business";
-const getSimpleApiRoute = (route) => route.replace(envir.Variables.WiseHomeFunctionApi, "");
+const project = "Project name";
+const getSimpleApiRoute = (route) => route.replace(envir.Variables.API_ROUTE, "");
 
 // handler for common HTTPS status errors - used for debugging and showing general alerts
 // PROPS
@@ -12,12 +12,13 @@ const getSimpleApiRoute = (route) => route.replace(envir.Variables.WiseHomeFunct
 // - isSubmit?
 // - submitMessage? when 200 and isSubmit, then it will show users this message instead of default
 // - hideDebugLogs? hide debug logs
+
 export function handleDebugLogsAndAlerts(props) {
     try {
-
-        const errorConnection = t("business_extra_general_error1");
-        const errorSomething = t("business_extra_general_error2");
-        const logChanges = t("business_extra_save_succes");
+        // general errors text - change to your liking
+        const errorConnection = props.t ? props.t("general_connection") : "Error (connection)";
+        const errorSomething = props.t ? props.t("general_error") : "Error";
+        const logChanges = props.t ? props.t("save_success") : null;
         const { response, status, hasAlert, isSubmit, hideDebugLogs, submitMessage, route } = props;
 
         const apiStatus = response?.response?.data?.status || null;
@@ -90,7 +91,8 @@ export function handleDebugLogsAndAlerts(props) {
         if (!hideDebugLogs) {
             console.log(chalk.dim.italic(`${responseObject.log} \n\n`), responseObject);
         }
-    } catch (error) {
+    }
+    catch (error) {
         console.error(`Something went wrong in handleDebugLogsAndAlerts: ${error}`)
     }
 }
@@ -104,6 +106,7 @@ export function handleDebugLogsAndAlerts(props) {
 // - hasAlert?
 // - setMessage? - sets absolute message in form
 // - customCallback? - do stuff in handleError 
+
 export function handleRequestError(props) {
     try {
         const { response, t, hasAlert, isSubmit, submitMessage, customCallback } = props;
@@ -126,9 +129,9 @@ export function handleRequestError(props) {
 
         console.log(chalk.bold(`🛑 ${status} (${apiStatus || "Unknown"}):`), getSimpleApiRoute(route));
 
-        // status can be string or something unexpected - if so then use the status code given by backend
+        // status can be string or something unexpected (example; axios timeout error) - if so then use the API status code
         if (status === undefined || typeof status !== "number") {
-            if (!response.response || !response.response.status) { return console.log(chalk.red("handleError: unexpected status errors")) }
+            if (!response.response || !response.response.status) { return console.log(chalk.red("handleRequestError: unexpected status errors")) }
             status = response.response.status
         }
 
@@ -162,9 +165,10 @@ export function handleRequestError(props) {
         });
     } catch (error) {
         if (error) {
-            throw new Error(`Something went wrong in the handleRequestError method - \n${error}`);
+            throw new Error(`Caught - Something went wrong in the handleRequestError method - \n${error}`);
         } else {
-            throw new Error(`Something went wrong in the handleRequestError method without given error message (^)`);
+            console.log(error);
+            throw new Error(`Caught - Something went wrong in the handleRequestError method without given error message (^)`);
         }
     }
 }
@@ -177,9 +181,10 @@ export function handleRequestError(props) {
 // - hasAlert?
 // - callback -> function that does something with data
 // - customCallback? - do stuff in handleError 
+
 export function handleRequestSuccess(props) {
     try {
-        const { response, hasAlert, isSubmit, callback, customCallback, submitMessage } = props;
+        const { t, response, hasAlert, isSubmit, callback, customCallback, submitMessage } = props;
         let route = null;
         let status = null;
 
@@ -221,10 +226,9 @@ export function handleRequestSuccess(props) {
 
         console.log(chalk.bold(`✅ ${status} (${apiStatus}):`), getSimpleApiRoute(route));
 
-        // Give https status to handler it shows general alerts
-        // We handle api status & logs below (because it depends on the app and is custom stuff) so we hide logs here
+        // Only want to use this for the 200 (ok) default alert - debug logs are better handled afterwards
         handleDebugLogsAndAlerts({
-            t: props.t,
+            t,
             status,
             route,
             response,
@@ -234,10 +238,7 @@ export function handleRequestSuccess(props) {
             hideDebugLogs: true,
         });
 
-        // !!! HANDLE ALL ACCEPTABLE API STATUSES & DEBUG LOGGING THAT ARE 200-299 -> else it will throw an error
-        // in short (for react-query):
-        // - for isSuccess means the following cases is true 
-        // - for onSuccess means the following cases is true 
+        // HANDLE ALL ACCEPTABLE API STATUSES & DEBUG LOGGING (200-299)
         let methodLog = "";
         if (typeof callback === 'function') {
             if (status === 298) {
@@ -246,6 +247,7 @@ export function handleRequestSuccess(props) {
                 responseObject.log = methodLog;
                 callback();
             } else {
+                // !! using API STATUS here for more custom logging!
                 switch (apiStatus) {
                     case 200:
                         // OK - do callback in success handler
@@ -283,6 +285,7 @@ export function handleRequestSuccess(props) {
         if (customCallback !== undefined || typeof (customCallback) === 'function') {
             customCallback();
         }
+
         console.log(responseObject);
     } catch (error) {
         if (error) {
