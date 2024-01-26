@@ -24,7 +24,7 @@ import { translate } from "./appMethods";
  */
 
 interface HandleDebugLogsAndAlertsProps {
-    t?: any;
+    t: any;
     status: number;
     route: string;
     response: any;
@@ -38,13 +38,13 @@ interface HandleDebugLogsAndAlertsProps {
 
 interface RequestHandlerProps {
     response: any;
-    t?: any;
+    t: (key: string) => void;
     isSubmit?: boolean;
     hasAlert?: boolean;
     hasAlertError?: boolean;
     submitMessage?: string;
     customCallback?: (res: AxiosError | AxiosResponse) => void;
-    callback?: (res: AxiosResponse) => void;
+    callback?: (res: AxiosResponse) => Array<any> | { [key: string]: any } | null; // ! If you use this, you'll need to return something, else you might get a react-query error!
 }
 
 interface AxiosRequestProps extends Omit<RequestHandlerProps, "response"> {
@@ -53,10 +53,10 @@ interface AxiosRequestProps extends Omit<RequestHandlerProps, "response"> {
     body?: { [key: string]: any };
 }
 
-const project = "Sethub";
+const project = "YOUR PROJECT";
 
 const getSimpleApiRoute = (route: string) =>
-    route.replace(process.env.API_URL!, "");
+    route.replace(process.env.API_URL, "");
 
 export function myRequestHandler(props: RequestHandlerProps) {
     // Accepted parameters of this method
@@ -70,11 +70,17 @@ export function myRequestHandler(props: RequestHandlerProps) {
         customCallback,
         submitMessage,
     } = props;
-    var route = response.request.responseURL; // API request route
-    var status = response.status || response.request.status; // HTTP status
+    var route = !response ? "NO RESPONSE" : !response.request ? "NO REQUEST" : response.request.responseURL; // API request route
+    var status = response.request ? response.request.status : response.status; // HTTP status
+
+    const successCodes = [
+        200, // OK
+        290, // No data
+        298 // Compressed data
+    ]
 
     // ! Handle error conditional
-    if (!props.response || props.response.status !== 200 || isAxiosError(props.response)) {
+    if (!props.response || props.response.status !== 200 || !successCodes.includes(response.status) || isAxiosError(props.response)) {
         try {
             // ? Debug logger
             handleDebugLogsAndAlerts({
@@ -103,6 +109,11 @@ export function myRequestHandler(props: RequestHandlerProps) {
                 customCallback: customCallback ? customCallback.toString() : undefined,
                 hideDebugLogs: true,
             });
+
+            // return null for HTTP status 298 case in useAdvancedsearch
+            if (response.status === 298) {
+                return null;
+            }
         } catch (error) {
             if (error) {
                 throw new Error(`Caught - Something went wrong - \n${error}`);
@@ -135,7 +146,7 @@ export function myRequestHandler(props: RequestHandlerProps) {
             }
 
             // !? Return callback function so you can manipulate the data received and use it
-            return callback ? callback(response) : response.data;
+            return callback ? callback(response) : !response && !response.data ? null : response.data === "No Data" ? null : response.data.instance;
 
         } catch (error) {
             if (error) {
@@ -147,11 +158,12 @@ export function myRequestHandler(props: RequestHandlerProps) {
     }
 }
 
-export const myAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
+export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
     return axios.get(`${props.route}`, props.header || {}).then((res: AxiosResponse) => {
         // ? Debug & request handler
         // ? If status is ok, it will return whatever is in the callback - make sure you return whatever you want so that it will be in the server state
         return myRequestHandler({
+            t: props.t,
             response: res,
             callback: props.callback,
             customCallback: props.customCallback,
@@ -161,6 +173,7 @@ export const myAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
         });
     }).catch((error: AxiosError) => {
         myRequestHandler({
+            t: props.t,
             response: error,
             callback: props.callback,
             customCallback: props.customCallback,
@@ -173,11 +186,12 @@ export const myAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
     })
 }
 
-export const myAxiosPostRequest = (props: AxiosRequestProps) => {
+export const sendAxiosPostRequest = (props: AxiosRequestProps) => {
     return axios.post(`${props.route}`, props.body || {}, props.header || {}).then((res: AxiosResponse) => {
         // ? Debug & request handler
         // ? If status is ok, it will return whatever is in the callback - make sure you return whatever you want so that it will be in the server state
         return myRequestHandler({
+            t: props.t,
             response: res,
             callback: props.callback,
             customCallback: props.customCallback,
@@ -187,6 +201,7 @@ export const myAxiosPostRequest = (props: AxiosRequestProps) => {
         });
     }).catch((error: AxiosError) => {
         myRequestHandler({
+            t: props.t,
             response: error,
             callback: props.callback,
             customCallback: props.customCallback,
@@ -202,13 +217,16 @@ export const myAxiosPostRequest = (props: AxiosRequestProps) => {
 
 export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
     try {
+        // ? (console) Debug-logs toggler for request handle
+        const showDebugLogs: boolean = Boolean(envir.Variables.DisableConsole);
+
         // ? General messages
         const errorConnection = props.t
             ? props.t("home_extra_general_error")
-            : "main_alert_error_connection";
+            : "Error (connection)";
         const errorSomething = props.t
             ? props.t("home_extra_general_error2")
-            : "main_alert_error_general";
+            : "Error";
         const logChanges = props.t
             ? props.t("home_extra_save_success")
             : "main_alert_success_saved";
@@ -225,26 +243,33 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
             customCallback,
         } = props;
 
-
-        var apiStatus = response?.data?.status || null;
-        var apiResult = response?.data || response?.response.data;
-        var method = response?.config?.method || null;
+        var apiStatus = response?.data?.status ?? null;
+        var apiResponse = response?.data || (response?.response?.data ?? null);
+        var method = response?.config?.method ?? null;
         var body = response?.config?.data
             ? JSON.parse(response.config.data)
             : null;
 
-        const responseObject = {
-            method,
-            route,
-            body,
-            status,
-            apiStatus,
-            apiResult,
-            hasAlert,
-            isSubmit,
-            callback: typeof callback === 'function' ? callback.toString() : null,
-            customCallback: customCallback ? customCallback.toString() : null,
-            project,
+        // ? Customise your debug log object here
+        var debugObject: { [key: string]: any } = {
+            ["📡 request"]: {
+                method,
+                route,
+                body,
+            },
+            ["📩 response"]: {
+                httpStatus: status,
+                // httpResponse: response, // If you want to see the whole RAW response
+                apiStatus,
+                apiResponse,
+            },
+            ["🛠️ settings"]: {
+                hasAlert,
+                isSubmit,
+                callback: callback ? callback.toString() : null,
+                customCallback: customCallback ? customCallback.toString() : null,
+                project,
+            },
             log: "",
         };
 
@@ -261,21 +286,21 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
                 }
                 if (callback) {
                     methodLog = callback && customCallback ? 'Callback & customCallback found' : 'Callback found';
-                    responseObject.log = methodLog;
+                    debugObject.log = methodLog;
                 } else {
                     if (customCallback) {
                         methodLog = "No callback found (found customCallback)";
-                        responseObject.log = methodLog;
+                        debugObject.log = methodLog;
                     } else {
                         methodLog = "No callback / customCallback";
-                        responseObject.log = methodLog;
+                        debugObject.log = methodLog;
                     }
                 }
                 break;
             case 204:
             case 290:
                 methodLog = "There was no data found in the request";
-                responseObject.log = methodLog;
+                debugObject.log = methodLog;
                 break;
             case 400:
                 if (hasAlert) {
@@ -283,14 +308,14 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
                 }
                 methodLog =
                     "This request had a backend error, check the server tab and call or use the debug logs";
-                responseObject.log = methodLog;
+                debugObject.log = methodLog;
                 break;
             case 404:
                 if (hasAlert) {
                     toast.error(errorSomething);
                 }
                 methodLog = "This request route was not found";
-                responseObject.log = methodLog;
+                debugObject.log = methodLog;
                 break;
             case 500:
                 if (hasAlert) {
@@ -298,25 +323,28 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
                 }
                 methodLog =
                     "This request had a SERVER error, please contact support";
-                responseObject.log = methodLog;
+                debugObject.log = methodLog;
                 break;
             default:
                 if (hasAlert) {
                     toast.error(errorConnection);
                 }
                 methodLog = "Something went wrong";
-                responseObject.log = methodLog;
+                debugObject.log = methodLog;
                 break;
         }
 
-        if (!hideDebugLogs) {
+        if (!hideDebugLogs && showDebugLogs) {
             const generalMessage = status === 200 ? chalk.bold(`✅ ${status} (${apiStatus}):`) : chalk.bold(`🛑 ${status} (${apiStatus || "Unknown"}):`)
             const apiRoute = getSimpleApiRoute(route);
+            const log = debugObject.log;
+            delete debugObject.log;
+
             console.log(
                 generalMessage,
                 apiRoute + '\n\n',
-                `${responseObject.log} \n`,
-                responseObject
+                `${log} \n`,
+                debugObject
             );
         }
     } catch (error) {
