@@ -46,10 +46,12 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 // }
 
 // Catch language in client (app-wrapper.tsx), for example;
-const useCatchLanguageInRouterChange = (): ReturnType<typeof useEffect> => {
+const useCatchLanguageChangeInRouter = (): ReturnType<typeof useEffect> => {
     const router = useRouter();
     const userStore = useUserStore();
     const translationStore = useTranslationStore();
+
+    const mutateEditLang = useEditLanguage(true);
 
     return useEffect(() => {
         if (!router.locale || router.locale === "default") router.push("/nl");
@@ -57,11 +59,18 @@ const useCatchLanguageInRouterChange = (): ReturnType<typeof useEffect> => {
         if (userStore.userData) {
             const languagesFilter: Language[] = translationStore.languages.filter(lang => lang.isoCode.toLowerCase() === router.locale!.toLowerCase());
             var newLanguageData: Language | null = languagesFilter.length === 0 ? null : languagesFilter[0];
-            console.warn(router.locale)
             if (!newLanguageData) return
 
-            // change language in userStore
-            userStore.changeUserLanguage({ isoCode: newLanguageData.isoCode, name: newLanguageData.name, id: newLanguageData.id })
+            // if language is not the same as the current language
+            if (userStore.userData.language.id !== newLanguageData.id) {
+                // change language in userStore
+                userStore.changeUserLanguage({ isoCode: newLanguageData.isoCode, name: newLanguageData.name, id: newLanguageData.id })
+
+                // change language in database
+                mutateEditLang.mutate({
+                    newIso: newLanguageData.isoCode
+                })
+            }
 
             // change language in local storage
             if (localStorage.getItem(LOCAL_STORAGE.LANGUAGE) && userStore.userData.language.isoCode.toLowerCase() !== localStorage.getItem(LOCAL_STORAGE.LANGUAGE)?.toLowerCase()) {
@@ -77,3 +86,4 @@ const useCatchLanguageInRouterChange = (): ReturnType<typeof useEffect> => {
             })
         }
     }, [router.locale, userStore.userData, translationStore.languages])
+}
