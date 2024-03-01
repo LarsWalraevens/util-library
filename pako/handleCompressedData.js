@@ -1,4 +1,5 @@
-// handler for when you have compressed data and want to uncompress it
+import pako from 'pako';
+
 export function handleCompressedData(res) {
     try {
         console.log("Method handleCompressedData")
