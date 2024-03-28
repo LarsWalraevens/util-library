@@ -7,9 +7,9 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
  * 
  * ############################################################################
  *  
- * These are handlers for http/api requests and is used things like:
- * - data handling from calls (props: transformResponseData)
- * - api status handling (props: onResponse)
+ * These are handlers for http/api requests and is used for things like:
+ * - data handling from calls (prop: transformResponseData)
+ * - api status handling (prop: onResponse)
  * - debug logs 
  * - log errors to the database
  * - general alert handling 
@@ -42,12 +42,11 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
         route: `v2/generic/catalogues/Languages`,
         t,
         errorLogger: {
-            doLogHandlerErrors: true,
-            doLogHttpErrors: true,
+            doLogHandlerErrors: false,
             props: {
-            mutateClientErrorLogger,
-            router,
-            userStore
+                mutateClientErrorLogger,
+                router,
+                userStore
             }
         },
         onResponse: (res) => {
@@ -63,8 +62,6 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
  */
 export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
     return axios.get(`${props.route}`, props.header || {}).then((res: AxiosResponse) => {
-        // ? Debug & request handler
-        // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
         return myRequestHandler({
             t: props.t,
             response: res,
@@ -159,8 +156,6 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
  */
 export const sendAxiosPostRequest = (props: AxiosRequestProps) => {
     return axios.post(`${props.route}`, props.body || {}, props.header || {}).then((res: AxiosResponse) => {
-        // ? Debug & request handler
-        // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
         return myRequestHandler({
             t: props.t,
             response: res,
@@ -349,7 +344,7 @@ export function myRequestHandler(props: RequestHandlerProps) {
 
 /**
  * 
- * Saves debug object in BE logs, so we can debug it. The error will be identified as a HTTP response flaw.
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a HTTP response error.
  * 
  */
 const sendErrorLogHttp = (props: SendErrorLogType) => {
@@ -372,7 +367,7 @@ const sendErrorLogHttp = (props: SendErrorLogType) => {
 
 /**
  * 
- * Saves debug object in BE logs, so we can debug it. The error will be identified as a network flaw.
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a network error.
  * 
  */
 const sendErrorLogNetwork = (props: SendErrorLogType) => {
@@ -395,7 +390,7 @@ const sendErrorLogNetwork = (props: SendErrorLogType) => {
 
 /**
  * 
- * Saves debug object in BE logs, so we can debug it. The error will be identified as a API call flaw.
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a API call error.
  * 
  */
 const sendErrorLogApiStatus = (props: SendErrorLogType) => {
@@ -417,7 +412,7 @@ const sendErrorLogApiStatus = (props: SendErrorLogType) => {
 
 /**
  * 
- * Saves debug object in BE logs, so we can debug it. The error will be identified as a calllback (onResponse, transformResponseData) flaw.
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a calllback (onResponse, transformResponseData) error.
  * 
  */
 const sendErrorLogHandler = (props: SendErrorLogType) => {
