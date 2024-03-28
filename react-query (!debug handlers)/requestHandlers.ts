@@ -1,7 +1,6 @@
 import axios, { AxiosError, AxiosResponse, isAxiosError } from "axios";
 import chalk from "chalk";
 import { toast } from "react-toastify";
-import envir from "@/env.json";
 import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
 
 /**
@@ -9,10 +8,11 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
  * ############################################################################
  *  
  * These are handlers for http/api requests and is used things like:
+ * - data handling from calls (props: transformResponseData)
+ * - api status handling (props: onResponse)
  * - debug logs 
+ * - log errors to the database
  * - general alert handling 
- * - returned data handling 
- * - api status handlinga
  * - more...
  * 
  * More details can be found at the methods
@@ -20,14 +20,15 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
  * ############################################################################
  */
 
+
 /**
  * Sends an axios get request with addition plugins like transform response data, debug logs, alerts, etc
  * 
  * @param route - API route to send the request
  * @param header - header of the request
  * @param t - translation function
- * @param onResponse - Do something when you get any response (AxiosResponse | AxiosError)
- * @param transformResponseData - Manipulate returned data
+ * @param onResponse - Callback - Do something when you get any response (AxiosResponse | AxiosError)
+ * @param transformResponseData - Callback - Manipulate returned data
  * @param hasAlert - whether to show an alert to user
  * @param submitMessage - message to show on submit (200 codes only)
  * @param isSubmit - whether to show submit button
@@ -40,6 +41,15 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
         queryFn: () => sendAxiosGetRequest({
         route: `v2/generic/catalogues/Languages`,
         t,
+        errorLogger: {
+            doLogHandlerErrors: true,
+            doLogHttpErrors: true,
+            props: {
+            mutateClientErrorLogger,
+            router,
+            userStore
+            }
+        },
         onResponse: (res) => {
             if (res && !isAxiosError(res) && res.data.data) toast.success("Success");
         },
@@ -68,20 +78,41 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
             errorLogger: props.errorLogger
         });
     }).catch((error: AxiosError) => {
-        // ? Throw error so server state isError is true;
-        myRequestHandler({
-            t: props.t,
-            response: error,
-            transformResponseData: props.transformResponseData,
-            onResponse: props.onResponse,
-            hasAlert: props.hasAlert,
-            submitMessage: props.submitMessage,
-            isSubmit: props.isSubmit,
-            hideDebugLogs: props.hideDebugLogs,
-            information: props.information,
-            errorLogger: props.errorLogger
-        });
+        const errorLogger = props.errorLogger;
+
+        // ? Log the errors in BE - seperate them by use cases
+        if (error && (error.response && error.response.status !== 200)) {
+            sendErrorLogHttp({
+                errorLogger: errorLogger,
+                response: error,
+                route: props.route,
+                httpStatus: error.response && error.response.status ? error.response.status : undefined,
+                id: "sendAxiosGetRequest-sendErrorLogHttp-catch"
+            });
+            // We need to show the client error logs for debugging - it didnt happen in myRequestHandler beceause it was throwing an error
+            doMyResponseClientLogs({
+                t: props.t,
+                response: error,
+                information: props.information,
+            });
+        } else if (error && error.code) {
+            sendErrorLogNetwork({
+                errorLogger,
+                response: error,
+                route: props.route
+            });
+        } else {
+            sendErrorLogHandler({
+                errorLogger: errorLogger,
+                response: error,
+                route: props.route,
+                onResponse: props.onResponse,
+                transformResponseData: props.transformResponseData,
+                id: "sendAxiosGetRequest-sendErrorLogHandler-catch"
+            });
+        }
         console.error(error);
+        // ? Throw error so server state isError is true;
         throw Error("Something went wrong ⬆️")
     })
 }
@@ -93,8 +124,8 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
  * @param body - body of the request
  * @param header - header of the request
  * @param t - translation function
- * @param onResponse - Do something when you get any response (AxiosResponse | AxiosError)
- * @param transformResponseData - Manipulate returned data
+ * @param onResponse - Callback - Do something when you get any response (AxiosResponse | AxiosError)
+ * @param transformResponseData - Callback - Manipulate returned data
  * @param hasAlert - whether to show an alert to user
  * @param submitMessage - message to show on submit (200 codes only)
  * @param isSubmit - whether to show submit button
@@ -124,6 +155,7 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
     }),
     ...
   })
+ * 
  */
 export const sendAxiosPostRequest = (props: AxiosRequestProps) => {
     return axios.post(`${props.route}`, props.body || {}, props.header || {}).then((res: AxiosResponse) => {
@@ -142,20 +174,41 @@ export const sendAxiosPostRequest = (props: AxiosRequestProps) => {
             errorLogger: props.errorLogger
         });
     }).catch((error: AxiosError) => {
-        // ? Throw error so server state isError is true;
-        myRequestHandler({
-            t: props.t,
-            response: error,
-            transformResponseData: props.transformResponseData,
-            onResponse: props.onResponse,
-            hasAlert: props.hasAlert,
-            submitMessage: props.submitMessage,
-            isSubmit: props.isSubmit,
-            hideDebugLogs: props.hideDebugLogs,
-            information: props.information,
-            errorLogger: props.errorLogger
-        });
+        const errorLogger = props.errorLogger;
+
+        // ? Log the errors in BE - seperate them by use cases
+        if (error && (error.response && error.response.status !== 200)) {
+            sendErrorLogHttp({
+                errorLogger: errorLogger,
+                response: error,
+                route: props.route,
+                httpStatus: error.response && error.response.status ? error.response.status : undefined,
+                id: "sendAxiosPostRequest-sendErrorLogHttp-catch"
+            });
+            // We need to show the client error logs for debugging - it didnt happen in myRequestHandler beceause it was throwing an error
+            doMyResponseClientLogs({
+                t: props.t,
+                response: error,
+                information: props.information,
+            });
+        } else if (error && error.code) {
+            sendErrorLogNetwork({
+                errorLogger,
+                response: error,
+                route: props.route
+            });
+        } else {
+            sendErrorLogHandler({
+                errorLogger: errorLogger,
+                response: error,
+                route: props.route,
+                onResponse: props.onResponse,
+                transformResponseData: props.transformResponseData,
+                id: "sendAxiosPostRequest-sendErrorLogHandler-catch"
+            });
+        }
         console.error(error);
+        // ? Throw error so server state isError is true;
         throw Error("Something went wrong ⬆️")
     })
 }
@@ -166,18 +219,17 @@ export const sendAxiosPostRequest = (props: AxiosRequestProps) => {
  * 
  */
 
-const project = "My Project Name";
+const project = process.env.ProjectName || "My project";
 const getSimpleApiRoute = (route: string) =>
-    route.replace(envir.Variables.API, "");
+    route.replace(process.env.UriApi, "");
 
-export interface WiseApiResponse {
-    data: any;
-    condition: number;
-    details: string | null;
-    isDataCompressed: boolean;
-    reflection: any;
-}
+const replaceCallbackString = (text: string): string => text.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\s+/g, ' ');
 
+/**
+ * 
+ * The request handler that handles all axios requests - debug logs, alerts, error loggings, call data handlers etc
+ * 
+ */
 export function myRequestHandler(props: RequestHandlerProps) {
     // Accepted parameters of this method
     const {
@@ -195,10 +247,12 @@ export function myRequestHandler(props: RequestHandlerProps) {
     } = props;
     var route = !response ? "NO RESPONSE" : !response.request ? "NO REQUEST" : response.request.responseURL; // API request route
     var status = response.request ? response.request.status : response.status; // HTTP status
-    var apiStatus: number | null | undefined = isAxiosError(response) ? ((response.response?.data as WiseApiResponse).condition || response.response?.status) : ((response.data as WiseApiResponse).condition || response.status || undefined);
+
+    var apiStatus: number | null | undefined = isAxiosError(response) ? (((response.response?.data as MyApiRespone) && (response.response?.data as MyApiRespone).condition) || response.response?.status) : ((response.data && response.data.condition) || response.status || undefined);
 
     // ! Handle error conditional
-    if (!props.response || status !== 200 || isAxiosError(props.response) || apiStatus !== 200) {
+    // if (!props.response || status !== 200 || isAxiosError(props.response) || apiStatus !== 200) {
+    if (!props.response || status !== 200 || isAxiosError(props.response) || !apiStatus || (apiStatus && parseInt(apiStatus.toString()) > 299)) {
         try {
             // ? Debug logger
             handleDebugLogsAndAlerts({
@@ -206,7 +260,8 @@ export function myRequestHandler(props: RequestHandlerProps) {
                 status,
                 route,
                 response,
-                information
+                information,
+                hideDebugLogs: hideDebugLogs || false,
                 // ? Dont give hasAlert & isSubmit - we dont want to show alerts yet - because the call can expect custom ones in onResponse
             });
 
@@ -229,36 +284,25 @@ export function myRequestHandler(props: RequestHandlerProps) {
                 hideDebugLogs: true,
             });
 
-            if (errorLogger && errorLogger.doLogHttpErrors && !errorLogger.props.mutateClientErrorLogger.isSuccess && status !== 200) {
-                saveErrorInLogs({
-                    id: "myRequestHandler-httpError",
-                    severity: "HIGH",
-                    origin: "myRequestHandler",
-                    information: "Something went wrong in the request - Expected 200 HTTP status but got something different",
-                    mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
-                    res: errorLogger.isSecurityBreach ? null : response,
-                    router: errorLogger.props.router,
-                    userStore: errorLogger.props.userStore,
-                    details: { route, status }
+            if (errorLogger && (errorLogger.doLogHttpErrors === undefined || errorLogger.doLogHttpErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess && status !== 200) {
+                sendErrorLogHttp({
+                    errorLogger,
+                    response,
+                    route,
+                    httpStatus: status
+                })
+            } else if (errorLogger && (errorLogger.doLogHandlerErrors === undefined || errorLogger.doLogHandlerErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess && apiStatus && parseInt(apiStatus.toString()) > 299) {
+                sendErrorLogApiStatus({
+                    errorLogger,
+                    response,
+                    route,
+                    apiStatus: apiStatus,
+                    httpStatus: status
                 })
             }
 
             return null;
         } catch (error) {
-            if (errorLogger && errorLogger.doLogHandlerErrors && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
-                saveErrorInLogs({
-                    id: "myRequestHandler-error",
-                    severity: "HIGH",
-                    origin: "myRequestHandler",
-                    information: "Something went wrong in the myRequestHandler in the error conditional",
-                    mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
-                    res: errorLogger.isSecurityBreach ? null : response,
-                    isMail: true,
-                    router: errorLogger.props.router,
-                    userStore: errorLogger.props.userStore,
-                    details: { error, route, status, extra: "When this error is logged, its probably something wrong in the callbacks" }
-                })
-            }
             if (error) {
                 throw new Error(`Caught - Something went wrong - \n${error}`);
             } else {
@@ -290,24 +334,10 @@ export function myRequestHandler(props: RequestHandlerProps) {
             if (onResponse) {
                 onResponse(response);
             }
-            // !? Return transformResponseData function so you can manipulate the data received and use it
-            return transformResponseData ? transformResponseData(response as AxiosResponse) : !(response as AxiosResponse) && !(response as AxiosResponse).data.data ? null : (response as AxiosResponse).data.data === "No Data" ? null : (response as AxiosResponse).data.data;
+            // !? Return transformResponseData function so you can manipulate the data received and use it when the API status is 200
+            return !apiStatus || apiStatus !== 200 ? null : transformResponseData ? transformResponseData(response as AxiosResponse) : !(response as AxiosResponse) && !(response as AxiosResponse).data.data ? null : (response as AxiosResponse).data.data === "No Data" ? null : (response as AxiosResponse).data.data;
 
         } catch (error) {
-            if (errorLogger && errorLogger.doLogHandlerErrors && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
-                saveErrorInLogs({
-                    id: "myRequestHandler-success",
-                    severity: "HIGH",
-                    origin: "myRequestHandler",
-                    information: "Something went wrong in the myRequestHandler in the success conditional",
-                    mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
-                    res: errorLogger.isSecurityBreach ? null : response,
-                    isMail: true,
-                    router: errorLogger.props.router,
-                    userStore: errorLogger.props.userStore,
-                    details: { error, route, status, extra: "When this error is logged, its probably something wrong in the callbacks" }
-                })
-            }
             if (error) {
                 throw new Error(`Caught - Something went wrong - \n${error}`);
             } else {
@@ -317,12 +347,113 @@ export function myRequestHandler(props: RequestHandlerProps) {
     }
 }
 
+/**
+ * 
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a HTTP response flaw.
+ * 
+ */
+const sendErrorLogHttp = (props: SendErrorLogType) => {
+    const { response, route, errorLogger, id } = props;
+
+    if (errorLogger && (errorLogger.doLogHttpErrors === undefined || errorLogger.doLogHttpErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
+        return saveErrorInLogs({
+            id: id || "myRequestHandler-sendErrorLogHttp",
+            severity: "MEDIUM",
+            information: "Something went wrong in the request - Expected 200 HTTP status but got something different",
+            mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
+            res: errorLogger.isSecurityBreach ? null : response,
+            router: errorLogger.props.router,
+            userStore: errorLogger.props.userStore,
+            details: { route, httpStatus: props.httpStatus || null, isSecurityBreach: errorLogger.isSecurityBreach },
+            error: response.toString()
+        })
+    }
+}
+
+/**
+ * 
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a network flaw.
+ * 
+ */
+const sendErrorLogNetwork = (props: SendErrorLogType) => {
+    const { response, route, errorLogger, id } = props;
+
+    if (errorLogger && (errorLogger.doLogNetworkErrors === undefined || errorLogger.doLogNetworkErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
+        return saveErrorInLogs({
+            id: id || "myRequestHandler-sendErrorLogNetwork",
+            severity: "HIGH",
+            information: "Something went wrong in the request - Got a network error",
+            mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
+            res: errorLogger.isSecurityBreach ? null : response,
+            router: errorLogger.props.router,
+            userStore: errorLogger.props.userStore,
+            details: { route, isSecurityBreach: errorLogger.isSecurityBreach },
+            error: response.toString()
+        })
+    }
+}
+
+/**
+ * 
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a API call flaw.
+ * 
+ */
+const sendErrorLogApiStatus = (props: SendErrorLogType) => {
+    const { response, route, errorLogger, id } = props;
+
+    if (errorLogger && (errorLogger.doLogApiErrors === undefined || errorLogger.doLogApiErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
+        return saveErrorInLogs({
+            id: id || "myRequestHandler-sendErrorLogApiStatus",
+            severity: "LOW",
+            information: "Something went wrong in the request - Expected > 299 API status but got something different",
+            mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
+            res: errorLogger.isSecurityBreach ? null : response,
+            router: errorLogger.props.router,
+            userStore: errorLogger.props.userStore,
+            details: { route, apiStatus: props.apiStatus || null, httpStatus: props.httpStatus || null, isSecurityBreach: errorLogger.isSecurityBreach }
+        })
+    }
+}
+
+/**
+ * 
+ * Saves debug object in BE logs, so we can debug it. The error will be identified as a calllback (onResponse, transformResponseData) flaw.
+ * 
+ */
+const sendErrorLogHandler = (props: SendErrorLogType) => {
+    const { response, route, errorLogger, id } = props;
+    if (errorLogger && (errorLogger.doLogHandlerErrors === undefined || errorLogger.doLogHandlerErrors === true) && !errorLogger.props.mutateClientErrorLogger.isSuccess) {
+        return saveErrorInLogs({
+            id: id || "sendAxiosGetRequest-sendErrorLogHandler",
+            severity: "HIGH",
+            information: "Something went wrong trying to do myRequestHandler. Likely because something went wrong in any of the callbacks (transformResponseData or onResponse). Check the details (error) for more information.",
+            mutateClientErrorLogger: errorLogger.props.mutateClientErrorLogger,
+            res: "Error-callbacks",
+            isMail: true,
+            router: errorLogger.props.router,
+            userStore: errorLogger.props.userStore,
+            details: {
+                apiRoute: route,
+                onResponse: props.onResponse ? replaceCallbackString(props.onResponse.toString()) : null,
+                transformResponseData: props.transformResponseData ? replaceCallbackString(props.transformResponseData.toString()) : null
+            },
+            error: response.toString()
+        })
+    }
+}
+
+/**
+ * 
+ * Handles debug logs and alerts according to the response, creates a handy object to debug with
+ * 
+ */
 export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
     try {
         // ? (console) Debug-logs toggler for request handle
-        const showDebugLogs: boolean = true;
-        // const showDebugLogs: boolean = Boolean(envir.Variables.DisableConsole);
-
+        const showDebugLogs: boolean =
+            typeof envir.Variables.DisableConsole === "boolean"
+                ? envir.Variables.DisableConsole!
+                : envir.Variables.DisableConsole === "true" ? false : true;
         // ? General messages
         const errorSomething = "Something went wrong, please try again or check the logs";
         const errorConnection = "A connection error occured";
@@ -344,8 +475,8 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
 
         var apiResponse = !isAxiosError(response) ? response?.data : (response?.response?.data);
         var apiStatus = isAxiosError(response)
-            ? ((response.response?.data as WiseApiResponse).condition || response.response?.status)
-            : ((response.data as WiseApiResponse).condition || response.status || null);
+            ? ((response.response?.data as MyApiRespone).condition || response.response?.status)
+            : ((response.data as MyApiRespone).condition || response.status || null);
         var method = response?.config?.method ?? null;
         var body = response?.config?.data
             ? JSON.parse(response.config.data)
@@ -429,27 +560,58 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
                 debugObject.log = methodLog;
                 break;
         }
-        debugObject.log = `${debugObject.log} && ${onResponse ? 'onResponse (found)' : 'onResponse (NOT FOUND)'}`
+        debugObject.log = `${debugObject.log} & ${onResponse ? 'onResponse (found)' : 'onResponse (NOT FOUND)'}`
 
-        if (!hideDebugLogs && showDebugLogs) {
+
+        const apiRoute = getSimpleApiRoute(route);
+        const log = debugObject.log;
+        delete debugObject.log;
+        if (information) debugObject["🔍 information"] = information
+        debugObject["🛠️ settings"].log = log;
+
+        // Send alert to frontend developer so they can send the given json to the appropriate developer with ease :)
+        if (process.env.ConfigState === CONFIG_STATE.LOCAL && (status !== 200 || (apiStatus && apiStatus > 299))) {
+            prompt(`🐛 You found a bug! \n\n ${apiRoute} \n HTTP: ${status}  API: ${apiStatus} \n\n Check logs in browser or copy text below to clipboard and send it to the appropriate developer: Ctrl+C, Enter`, JSON.stringify(debugObject, null, 2));
+        }
+        if (!hideDebugLogs && showDebugLogs === true) {
             const generalMessage = status === 200 && (apiStatus && apiStatus <= 299) ? chalk.bold(`✅ ${status} (${apiStatus}):`) : chalk.bold(`🛑 ${status} (${apiStatus || "Unknown"}):`)
-            const apiRoute = getSimpleApiRoute(route);
-            const log = debugObject.log;
-            delete debugObject.log;
-            if (information) debugObject["🔍 information"] = information
-
             console.log(
                 generalMessage,
                 apiRoute + '\n\n',
-                `${log} \n`,
                 debugObject
             );
+
         }
     } catch (error) {
         console.error(`Something went wrong in handleDebugLogsAndAlerts: ${error}`);
     }
 }
 
+/**
+ * 
+ * For some axios errors, the console logs dont show up from my debug-handler, this method will do that
+ * 
+ */
+export function doMyResponseClientLogs(props: MyResponseClientLogs) {
+    // Accepted parameters of this method
+    // ? Debug logger
+    const {
+        t,
+        response,
+        information
+    } = props;
+
+    var route = !response ? null : !response.request ? null : response.request.responseURL; // API request route
+    var status = response.request ? response.request.status : response.status; // HTTP status
+    handleDebugLogsAndAlerts({
+        t,
+        status,
+        route,
+        response,
+        information
+        // ? Dont give hasAlert & isSubmit - we dont want to show alerts yet - because the call can expect custom ones in onResponse
+    });
+}
 
 /**
  * 
@@ -457,7 +619,7 @@ export function handleDebugLogsAndAlerts(props: HandleDebugLogsAndAlertsProps) {
  * 
  */
 
-export type AxiosCombinedResponse = AxiosResponse<WiseApiResponse>;
+export type AxiosCombinedResponse = AxiosResponse<MyApiRespone>;
 
 interface HandleDebugLogsAndAlertsProps extends RequestHandlerProps {
     status: number;
@@ -473,9 +635,11 @@ interface RequestHandlerProps {
     hideDebugLogs?: boolean;
     submitMessage?: string;
     errorLogger?: {
-        doLogHttpErrors: boolean;
-        doLogHandlerErrors: boolean;
-        isSecurityBreach?: boolean; /* if you dont want the logs to contain response (so that it doesnt include body) */
+        doLogHttpErrors?: boolean; // default = true
+        doLogHandlerErrors?: boolean; // default = true
+        doLogNetworkErrors?: boolean; // default = true
+        doLogApiErrors?: boolean; // default = true
+        isSecurityBreach?: boolean; // default = false || if you dont want the logs to contain response (so that it doesnt include body) 
         props: Omit<HttpErrorLoggerProps, "id" | "details" | "origin" | "res" | "information" | "severity">;
     };
     onResponse?: (res: AxiosError | AxiosCombinedResponse) => void;
@@ -487,4 +651,29 @@ interface AxiosRequestProps extends Omit<RequestHandlerProps, "response"> {
     header?: { [key: string]: any };
     route: string;
     body?: { [key: string]: any };
+}
+
+type SendErrorLogType = {
+    id?: string;
+    response: AxiosCombinedResponse | AxiosError | AxiosResponse;
+    route: string;
+    apiStatus?: number;
+    httpStatus?: number;
+    errorLogger: RequestHandlerProps["errorLogger"];
+    transformResponseData?: RequestHandlerProps["transformResponseData"];
+    onResponse?: RequestHandlerProps["onResponse"];
+}
+
+type MyResponseClientLogs = {
+    response: AxiosError
+    t: RequestHandlerProps["t"]
+    information: RequestHandlerProps["information"];
+}
+
+export interface MyApiRespone {
+    data: any;
+    condition: number;
+    details: string | null;
+    isDataCompressed: boolean;
+    reflection: any;
 }
