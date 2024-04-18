@@ -31,7 +31,7 @@ import { HttpErrorLoggerProps, saveErrorInLogs } from "./requestErrorLogger";
  * @param transformResponseData - Callback - Manipulate returned data
  * @param hasAlert - whether to show an alert to user
  * @param submitMessage - message to show on submit (200 codes only)
- * @param isSubmit - whether to show submit button
+ * @param isSubmit - whether to show an alert when pressing submit button (200 codes only)
  * @param hideDebugLogs - whether to hide debug logs
  * @param information - debug information for more context (object type)
  * @param errorLogger - error logger that logs errors to server
@@ -125,7 +125,7 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
  * @param transformResponseData - Callback - Manipulate returned data
  * @param hasAlert - whether to show an alert to user
  * @param submitMessage - message to show on submit (200 codes only)
- * @param isSubmit - whether to show submit button
+ * @param isSubmit - whether to show an alert when pressing submit button (200 codes only)
  * @param hideDebugLogs - whether to hide debug logs
  * @param information - debug information for more context (object type)
  * @param errorLogger - error logger that logs errors to server
