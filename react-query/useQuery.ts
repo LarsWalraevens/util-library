@@ -1,9 +1,21 @@
 // https://tanstack.com/query/latest/docs/framework/react/reference/useQuery#usequery
-
-// Usually used to go and GET data from an API
-const useMyQueryHook = (props) => {
-    return useQuery({
+function HookExamplePage(props) {
+    const exampleQuery = useQuery({
         queryKey: ["myCacheResultKeyOfThisCall"],
+        // In queryFn you can put your custom request handler like example in comments:
+        // queryFn: () => sendAxiosGetRequest({
+        //     route: `v2/generic/catalogues/Languages`,
+        //     onResponse: (res) => {
+        //         if (res && !isAxiosError(res) && res.data.data && res.data.status === 200) toast.success("Success");
+        //     },
+        //     transformResponseData: (res) => {
+        //         return res.data.data.sort((a, b) => a.disabled ? -1 : 1);
+        //     }
+        //     }),
+        //     ...
+        // }),
+
+        // but you can also just do a regular request
         queryFn: () => axios.post("<my-api-call>", {
             bodyItem1: "value1",
             bodyItem2: "value2"
@@ -14,18 +26,11 @@ const useMyQueryHook = (props) => {
             return manipulateData
         }).catch((error) => {
             // your error logic here
-            console.error(error);
+            throw console.error(error);
         }),
         enabled: !!props.userData, // <-- only enable when i got userData
         retry: 4, // <-- retry 4 times if first wasnt successful
-    })
+    });
+
+    return <PageContent />
 }
-
-
-// HOW TO USE HOOK?
-const {
-    data: myCustomDataVariable, // custom names to properties can be done like this - this has the manipulated data what you did in the queryFn (then fn) 
-    refetch, // Means you'll do the useQuery again with the same queryKey
-    isLoading, // Boolean to indicate that the query is loading
-    isError // Boolean to indicate that the query has an error
-} = useMyQueryHook({ userData: "myUserData" });
