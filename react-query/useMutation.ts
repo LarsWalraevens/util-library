@@ -1,12 +1,22 @@
 // https://tanstack.com/query/latest/docs/framework/react/reference/useMutation#usemutation
 
-// Usually used to make changes with the help of your API (ex; pressing save button)
-const useMyMutationHook = () => {
-    return useMutation({
+function HookExamplePage(props) {
+    const exampleMutation = useMutation({
         mutationKey: ["myCacheResultKeyOfThisCall"],
-        mutationFn: (propsFn) => axios.post("<my-api-call>", {
-            bodyItem1: propsFn.myBodyData1,
-            bodyItem2: propsFn.myBodyData2
+        // In queryFn you can put your custom request handler like example in comments:
+        // queryFn: () => sendAxiosGetRequest({
+        //     route: `v2/generic/catalogues/Languages`,
+        //     onResponse: (res) => {
+        //         if (res && !isAxiosError(res) && res.data.data && res.data.status === 200) toast.success("Success");
+        //     },
+        //     }),
+        //     ...
+        // }),
+
+        // but you can also just do a regular request
+        mutationFn: () => axios.post("<my-api-call>", {
+            bodyItem1: "value1",
+            bodyItem2: "value2"
         }).then((data) => {
             // can manipulate client state data here
             const manipulateData = data;
@@ -14,35 +24,10 @@ const useMyMutationHook = () => {
             return manipulateData
         }).catch((error) => {
             // your error logic here
-            console.error(error);
+            throw console.error(error);
         }),
-        onSuccess: (res) => {
-            // do something on success
-        },
-        onError: (err) => {
-            // do something on error
-        },
-        onSettled: (res) => {
-            // do something on settled - regardless if it failed or not
-        }
-    })
+        retry: 4, // <-- retry 4 times if first wasnt successful
+    });
+
+    return <PageContent />
 }
-
-
-// HOW TO USE HOOK?
-const mutateMyHook = useMyMutationHook();
-
-// mutateMyHook.data -> get data that was returned - usually you dont use this for a mutation but you can
-
-/**
- * 
-<button
-disabled = {mutateMyHook.isLoading}
-onClick = {() => mutateMyHook.mutate({
-    bodyItem1: "myBodyData1",
-    bodyItem2: "myBodyData2"
-})}
->
-</button>
- * 
- */
