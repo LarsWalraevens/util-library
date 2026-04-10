@@ -1,12 +1,12 @@
 import axios, {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse,
-  isAxiosError,
-} from "axios";
-import chalk from "chalk";
-import { CONFIG_STATE } from "../helpers/enums";
-import { getShowDebugLogs } from "./my-methods";
+    AxiosError,
+    AxiosRequestConfig,
+    AxiosResponse,
+    isAxiosError,
+} from 'axios'
+import chalk from 'chalk'
+import { CONFIG_STATE } from '../constants'
+import { getShowDebugLogs } from './my-methods'
 
 /**
  *
@@ -14,9 +14,9 @@ import { getShowDebugLogs } from "./my-methods";
  *
  */
 
-const project = process.env.NEXT_PUBLIC_ProjectName || "My project";
+const project = process.env.NEXT_PUBLIC_ProjectName || 'Project'
 const getSimpleApiRoute = (route: string) =>
-  route.replace((process.env.NEXT_PUBLIC_UriApi as string) || "", "");
+    route.replace((process.env.NEXT_PUBLIC_UriHomeApi as string) || '', '')
 
 /**
  *
@@ -60,56 +60,24 @@ const getSimpleApiRoute = (route: string) =>
     });
   * 
  */
-export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
-  return axios
-    .get(`${props.route}`, props.config || {})
-    .then((res: AxiosResponse) => {
-      // ? Debug & request handler
-      // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
-      return myRequestHandler({
-        response: res,
-        transformResponseData: props.transformResponseData,
-        onResponse: props.onResponse,
-        isSecurityBreach: props.isSecurityBreach,
-        hideDebugLogs: props.hideDebugLogs,
-        information: props.information,
-        additionalTitleLog: props.additionalTitleLog,
-      });
-    })
-    .catch((error) => {
-      console.error(error);
-      const showDebugLogs = getShowDebugLogs();
-
-      let debugObj: ReturnType<typeof doMyResponseClientLogs> | null = null;
-      // ? Log the errors in BE - seperate them by use cases
-      if (error && error.response && error.response.status !== 200) {
-        // We need to show the client error logs for debugging - it didnt happen in myRequestHandler beceause it was throwing an error
-        debugObj = doMyResponseClientLogs({
-          response: error,
-          information: props.information,
-        });
-      }
-
-      // ? remove sensitive data
-      if (
-        debugObj &&
-        debugObj?.["📩 response"] &&
-        process.env.NEXT_PUBLIC_ConfigState === CONFIG_STATE.PRODUCTION &&
-        !showDebugLogs
-      ) {
-        delete debugObj?.["📡 request"]?.body;
-        delete debugObj?.["📩 response"]?.apiResponse;
-      }
-
-      // ? throw error message so server state isError is true;
-      throw debugObj
-        ? {
-            message: error.message,
-            debug: debugObj,
-          }
-        : error;
-    });
-};
+export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, 'body'>) => {
+    return axios
+        .get(`${props.route}`, props.config || {})
+        .then((res: AxiosResponse) => {
+            // ? Debug & request handler
+            // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
+            return myRequestHandler({
+                response: res,
+                transformResponseData: props.transformResponseData,
+                onResponse: props.onResponse,
+                isSecurityBreach: props.isSecurityBreach,
+                hideDebugLogs: props.hideDebugLogs,
+                information: props.information,
+                additionalTitleLog: props.additionalTitleLog,
+            })
+        })
+        .catch((error: AxiosError) => handleCatchError(error, props.information))
+}
 
 /**
  * Sends an axios post request with addition plugins like transform response data, debug logs, etc
@@ -150,58 +118,60 @@ export const sendAxiosGetRequest = (props: Omit<AxiosRequestProps, "body">) => {
  * 
  */
 export const sendAxiosPostRequest = (
-  props: Omit<AxiosRequestProps, "body"> & {
-    body: NonNullable<AxiosRequestProps["body"]>;
-  },
+    props: Omit<AxiosRequestProps, 'body'> & {
+        body: NonNullable<AxiosRequestProps['body']>
+    },
 ) => {
-  return axios
-    .post(`${props.route}`, props.body || {}, props.config || {})
-    .then((res: AxiosResponse) => {
-      // ? Debug & request handler
-      // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
-      return myRequestHandler({
-        response: res,
-        transformResponseData: props.transformResponseData,
-        onResponse: props.onResponse,
-        isSecurityBreach: props.isSecurityBreach,
-        hideDebugLogs: props.hideDebugLogs,
-        information: props.information,
-        additionalTitleLog: props.additionalTitleLog,
-      });
-    })
-    .catch((error) => {
-      console.error(error);
-      const showDebugLogs = getShowDebugLogs();
-      let debugObj = null;
-      // ? Log the errors in BE - seperate them by use cases
-      if (error && error.response && error.response.status !== 200) {
-        // We need to show the client error logs for debugging - it didnt happen in myRequestHandler beceause it was throwing an error
-        debugObj = doMyResponseClientLogs({
-          response: error,
-          information: props.information,
-        });
-      }
+    return axios
+        .post(`${props.route}`, props.body || {}, props.config || {})
+        .then((res: AxiosResponse) => {
+            // ? Debug & request handler
+            // ? If status is ok, it will return whatever is in the transformResponseData - make sure you return whatever you want so that it will be in the server state
+            return myRequestHandler({
+                response: res,
+                transformResponseData: props.transformResponseData,
+                onResponse: props.onResponse,
+                isSecurityBreach: props.isSecurityBreach,
+                hideDebugLogs: props.hideDebugLogs,
+                information: props.information,
+                additionalTitleLog: props.additionalTitleLog,
+            })
+        })
+        .catch((error: AxiosError) => handleCatchError(error, props.information))
+}
 
-      // ? remove sensitive data
-      if (
+/**
+ *
+ * Shared catch handler used by sendAxiosGetRequest and sendAxiosPostRequest
+ *
+ */
+function handleCatchError(
+    error: AxiosError,
+    information: RequestHandlerProps['information'],
+): never {
+    console.error(error)
+    const showDebugLogs = getShowDebugLogs()
+    let debugObj: ReturnType<typeof doMyResponseClientLogs> | null = null
+
+    if (error && error.response && error.response.status !== 200) {
+        debugObj = doMyResponseClientLogs({
+            response: error,
+            information,
+        })
+    }
+
+    if (
         debugObj &&
-        debugObj?.["📩 response"] &&
+        debugObj?.['📩 response'] &&
         process.env.NEXT_PUBLIC_ConfigState === CONFIG_STATE.PRODUCTION &&
         !showDebugLogs
-      ) {
-        delete debugObj?.["📡 request"]?.body;
-        delete debugObj?.["📩 response"]?.apiResponse;
-      }
+    ) {
+        delete debugObj?.['📡 request']?.body
+        delete debugObj?.['📩 response']?.apiResponse
+    }
 
-      // ? throw error message so server state isError is true;
-      throw debugObj
-        ? {
-            message: error.message,
-            debug: debugObj,
-          }
-        : error;
-    });
-};
+    throw debugObj ? { message: error.message, debug: debugObj } : error
+}
 
 /**
  *
@@ -209,117 +179,112 @@ export const sendAxiosPostRequest = (
  *
  */
 export function myRequestHandler(props: RequestHandlerProps) {
-  try {
     // Accepted parameters of this method
-    const {
-      response,
-      transformResponseData,
-      onResponse,
-      hideDebugLogs,
-      information,
-      additionalTitleLog,
-      isSecurityBreach,
-    } = props;
-    const route = !response
-      ? "NO RESPONSE"
-      : !response.request
-        ? "NO REQUEST"
-        : response.request.responseURL; // API request route
-    const status = response.request ? response.request.status : response.status; // HTTP status
+        const {
+            response,
+            transformResponseData,
+            onResponse,
+            hideDebugLogs,
+            information,
+            additionalTitleLog,
+            isSecurityBreach,
+        } = props
+        const route = !response
+            ? 'NO RESPONSE'
+            : !response.request
+              ? 'NO REQUEST'
+              : response.request.responseURL // API request route
+        const status = response.request
+            ? response.request.status
+            : response.status // HTTP status
 
-    const apiStatus: number | null | undefined = isAxiosError(response)
-      ? ((response.response?.data as ApiResponse) &&
-          (response.response?.data as ApiResponse).condition) ||
-        response.response?.status
-      : (response.data && response.data.condition) ||
-        response.status ||
-        undefined;
+        const apiStatus: number | null | undefined = isAxiosError(response)
+            ? ((response.response?.data as ApiResponse) &&
+                  (response.response?.data as ApiResponse).condition) ||
+              response.response?.status
+            : (response.data && response.data.condition) ||
+              response.status ||
+              undefined
 
-    // ? Handle error conditional
-    // if (!props.response || status !== 200 || isAxiosError(props.response) || apiStatus !== 200) {
-    // Custom if - api statuses above 299 are handled as errors
-    if (
-      !props.response ||
-      status !== 200 ||
-      isAxiosError(props.response) ||
-      !apiStatus ||
-      (apiStatus && parseInt(apiStatus.toString()) > 299)
-    ) {
-      // ? Debug logger
-      handleDebugLogs({
-        status,
-        route,
-        response,
-        information,
-        hideDebugLogs: hideDebugLogs || false,
-        additionalTitleLog,
-      });
+        // ? Handle error conditional
+        // if (!props.response || status !== 200 || isAxiosError(props.response) || apiStatus !== 200) {
+        // Custom if - api statuses above 299 are handled as errors
+        if (
+            !props.response ||
+            status !== 200 ||
+            isAxiosError(props.response) ||
+            !apiStatus ||
+            (apiStatus && parseInt(apiStatus.toString()) > 299)
+        ) {
+            // ? Debug logger
+            handleDebugLogs({
+                status,
+                route,
+                response,
+                information,
+                hideDebugLogs: hideDebugLogs || false,
+                additionalTitleLog,
+            })
 
-      // ? Throw something in onResponse to catch specific statuses or API statuses
-      if (onResponse) {
-        onResponse(response);
-      }
+            // ? Throw something in onResponse to catch specific statuses or API statuses
+            if (onResponse) {
+                onResponse(response)
+            }
 
-      // ? Now you can do this to handle general alerts
-      handleDebugLogs({
-        status,
-        route,
-        response,
-        transformResponseData: transformResponseData,
-        onResponse: onResponse,
-        hideDebugLogs: true,
-        isSecurityBreach,
-      });
+            // ? Now you can do this to handle general alerts
+            handleDebugLogs({
+                status,
+                route,
+                response,
+                transformResponseData: transformResponseData,
+                onResponse: onResponse,
+                hideDebugLogs: true,
+                isSecurityBreach,
+            })
 
-      // ? Throw an error with detailed stringified error so that error state is true & we error reason is the stringified error
-      throw JSON.stringify(
-        getRequestErrorObject({
-          response: response,
-          isSecurityBreach: isSecurityBreach || false,
-        }),
-        null,
-        2,
-      );
-    }
+            // ? Throw an error with detailed stringified error so that error state is true & we error reason is the stringified error
+            throw JSON.stringify(
+                getRequestErrorObject({
+                    response: response,
+                    isSecurityBreach: isSecurityBreach || false,
+                }),
+                null,
+                2,
+            )
+        }
 
-    // ! Handle success conditional
-    // ? Will trigger if its 200 HTTP status and has expected props
-    else {
-      // ? Debug logger
-      handleDebugLogs({
-        status,
-        route,
-        response,
-        transformResponseData: transformResponseData,
-        onResponse: onResponse,
-        hideDebugLogs:
-          props.hideDebugLogs === true && props.hideDebugLogs !== undefined
-            ? true
-            : false,
-        information,
-        additionalTitleLog,
-        isSecurityBreach,
-      });
+        // ! Handle success conditional
+        // ? Will trigger if its 200 HTTP status and has expected props
+        else {
+            // ? Debug logger
+            handleDebugLogs({
+                status,
+                route,
+                response,
+                transformResponseData: transformResponseData,
+                onResponse: onResponse,
+                hideDebugLogs: !!props.hideDebugLogs,
+                information,
+                additionalTitleLog,
+                isSecurityBreach,
+            })
 
-      // ? Throw something in onResponse to catch specific cases or API statuses
-      if (onResponse) {
-        onResponse(response);
-      }
-      // !? Return transformResponseData function so you can manipulate the data received and use it when the API status is 200
-      return !apiStatus || apiStatus !== 200
-        ? null
-        : transformResponseData
-          ? transformResponseData(response as AxiosResponse)
-          : !(response as AxiosResponse) &&
-              !(response as AxiosResponse).data.data
-            ? null
-            : (response as AxiosResponse).data.data === "No Data"
-              ? null
-              : (response as AxiosResponse).data.data;
-    }
-  } catch (error) {
-    throw error;
-  }
+            // ? Throw something in onResponse to catch specific cases or API statuses
+            if (onResponse) {
+                onResponse(response)
+            }
+            // !? Return transformResponseData function so you can manipulate the data received and use it when the API status is 200
+            return !apiStatus || apiStatus !== 200
+                ? null
+                : transformResponseData
+                  ? transformResponseData(response as AxiosResponse)
+                  : !(response as AxiosResponse) &&
+                      !(response as AxiosResponse).data.data
+                    ? null
+                    : (response as AxiosResponse).data.data === 'No Data'
+                      ? null
+                      : (response as AxiosResponse).data.data
+        }
 }
 
 /**
@@ -328,107 +293,110 @@ export function myRequestHandler(props: RequestHandlerProps) {
  *
  */
 export function handleDebugLogs(props: HandleDebugLogsProps) {
-  // ? (console) Debug-logs toggler for request handle
-  const showDebugLogs = getShowDebugLogs();
+    // ? (console) Debug-logs toggler for request handle
+    const showDebugLogs = getShowDebugLogs()
 
-  const {
-    response,
-    status,
-    hideDebugLogs,
-    route,
-    transformResponseData,
-    onResponse,
-    information,
-    additionalTitleLog,
-  } = props;
+    const {
+        response,
+        status,
+        hideDebugLogs,
+        route,
+        transformResponseData,
+        onResponse,
+        information,
+        additionalTitleLog,
+    } = props
 
-  const apiResponse = !isAxiosError(response)
-    ? response?.data
-    : response?.response?.data;
-  const apiStatus = isAxiosError(response)
-    ? (response.response?.data as ApiResponse).condition ||
-      response.response?.status
-    : (response.data as ApiResponse).condition || response.status || null;
-  const method = response?.config?.method ?? null;
-  const body = response?.config?.data ? JSON.parse(response.config.data) : null;
+    const apiResponse = !isAxiosError(response)
+        ? response?.data
+        : response?.response?.data
+    const apiStatus = isAxiosError(response)
+        ? (response.response?.data as ApiResponse).condition ||
+          response.response?.status
+        : (response.data as ApiResponse).condition || response.status || null
+    const method = response?.config?.method ?? null
+    const body = response?.config?.data
+        ? JSON.parse(response.config.data)
+        : null
 
-  // ? Customise your debug log object here
-  const debugObject: RequestLogProps = {
-    ["📡 request"]: {
-      method,
-      route,
-      body,
-    },
-    ["📩 response"]: {
-      httpStatus: status,
-      apiStatus,
-      apiResponse,
-    },
-    ["🛠️ settings"]: {
-      transformResponseData: transformResponseData
-        ? transformResponseData.toString()
-        : null,
-      onResponse: onResponse ? onResponse.toString() : null,
-      project,
-      hideDebugLogs,
-    },
-  };
+    // ? Customise your debug log object here
+    const debugObject: RequestLogProps = {
+        ['📡 request']: {
+            method,
+            route,
+            body,
+        },
+        ['📩 response']: {
+            httpStatus: status,
+            apiStatus,
+            apiResponse,
+        },
+        ['🛠️ settings']: {
+            transformResponseData: transformResponseData
+                ? transformResponseData.toString()
+                : null,
+            onResponse: onResponse ? onResponse.toString() : null,
+            project,
+            hideDebugLogs,
+        },
+    }
 
-  let methodLog = "";
+    let methodLog = ''
 
-  switch (status) {
-    case 200:
-      if (apiStatus === 200) {
-        methodLog = transformResponseData
-          ? "transformResponseData (found)"
-          : "transformResponseData (NOT FOUND)";
-        debugObject["🛠️ settings"].log = methodLog;
-      } else {
-        methodLog = transformResponseData
-          ? "transformResponseData (found) did not trigger because API status was not 200"
-          : "Api status was not 200";
-        debugObject["🛠️ settings"].log = methodLog;
-      }
-      break;
-    case 400:
-      methodLog =
-        "This request had a backend error, check the server tab and call or use the debug logs";
-      debugObject["🛠️ settings"].log = methodLog;
-      break;
-    case 404:
-      methodLog = "This request route was not found";
-      debugObject["🛠️ settings"].log = methodLog;
-      break;
-    case 500:
-      methodLog = "This request had a SERVER error, please contact support";
-      debugObject["🛠️ settings"].log = methodLog;
-      break;
-    default:
-      methodLog = "Something went wrong";
-      debugObject["🛠️ settings"].log = methodLog;
-      break;
-  }
-  debugObject["🛠️ settings"].log =
-    `${debugObject["🛠️ settings"].log} & ${onResponse ? "onResponse (found)" : "onResponse (NOT FOUND)"}`;
+    switch (status) {
+        case 200:
+            if (apiStatus === 200) {
+                methodLog = transformResponseData
+                    ? 'transformResponseData (found)'
+                    : 'transformResponseData (NOT FOUND)'
+                debugObject['🛠️ settings'].log = methodLog
+            } else {
+                methodLog = transformResponseData
+                    ? 'transformResponseData (found) did not trigger because API status was not 200'
+                    : 'Api status was not 200'
+                debugObject['🛠️ settings'].log = methodLog
+            }
+            break
+        case 400:
+            methodLog =
+                'This request had a backend error, check the server tab and call or use the debug logs'
+            debugObject['🛠️ settings'].log = methodLog
+            break
+        case 404:
+            methodLog = 'This request route was not found'
+            debugObject['🛠️ settings'].log = methodLog
+            break
+        case 500:
+            methodLog =
+                'This request had a SERVER error, please contact support'
+            debugObject['🛠️ settings'].log = methodLog
+            break
+        default:
+            methodLog = 'Something went wrong'
+            debugObject['🛠️ settings'].log = methodLog
+            break
+    }
+    debugObject['🛠️ settings'].log =
+        `${debugObject['🛠️ settings'].log} & ${onResponse ? 'onResponse (found)' : 'onResponse (NOT FOUND)'}`
 
-  const apiRoute = getSimpleApiRoute(route);
-  if (information) debugObject["🔍 information"] = information;
+    const apiRoute = getSimpleApiRoute(route)
+    if (information) debugObject['🔍 information'] = information
 
-  if (!hideDebugLogs && showDebugLogs === true) {
-    const generalMessage =
-      status === 200 && apiStatus && apiStatus <= 299
-        ? chalk.bold(`✅ ${status} (${apiStatus}):`)
-        : chalk.bold(`🛑 ${status} (${apiStatus || "Unknown"}):`);
-    console.log(
-      generalMessage,
-      apiRoute + "\n\n",
-      additionalTitleLog ? `${additionalTitleLog} \n\n` : "",
-      debugObject,
-    );
+    if (!hideDebugLogs && showDebugLogs === true) {
+        const generalMessage =
+            status === 200 && apiStatus && apiStatus <= 299
+                ? chalk.bold(`✅ ${status} (${apiStatus}):`)
+                : chalk.bold(`🛑 ${status} (${apiStatus || 'Unknown'}):`)
+        console.log(
+            generalMessage,
+            apiRoute + '\n\n',
+            additionalTitleLog ? `${additionalTitleLog} \n\n` : '',
+            debugObject,
+        )
 
-    return debugObject;
-  }
-  return null;
+        return debugObject
+    }
+    return null
 }
 
 /**
@@ -437,23 +405,23 @@ export function handleDebugLogs(props: HandleDebugLogsProps) {
  *
  */
 export function doMyResponseClientLogs(props: MyResponseClientLogs) {
-  // Accepted parameters of this method
-  // ? Debug logger
-  const { response, information } = props;
+    // Accepted parameters of this method
+    // ? Debug logger
+    const { response, information } = props
 
-  const route = !response
-    ? null
-    : !response.request
-      ? null
-      : response.request.responseURL; // API request route
-  const status = response.request ? response.request.status : response.status; // HTTP status
-  return handleDebugLogs({
-    status,
-    route,
-    response,
-    information,
-    additionalTitleLog: "Caught (doMyResponseClientLogs)",
-  });
+    const route = !response
+        ? null
+        : !response.request
+          ? null
+          : response.request.responseURL // API request route
+    const status = response.request ? response.request.status : response.status // HTTP status
+    return handleDebugLogs({
+        status,
+        route,
+        response,
+        information,
+        additionalTitleLog: 'Caught (doMyResponseClientLogs)',
+    })
 }
 
 /**
@@ -462,49 +430,49 @@ export function doMyResponseClientLogs(props: MyResponseClientLogs) {
  *
  */
 export function getRequestErrorObject(props: {
-  response: AxiosError | AxiosCombinedResponse;
-  reason?: string;
-  isSecurityBreach?: boolean;
+    response: AxiosError | AxiosCombinedResponse
+    reason?: string
+    isSecurityBreach?: boolean
 }): RequestErrorObject {
-  const res = props.response;
-  const httpStatus =
-    res.request && res.request.status ? res.request.status : res.status; // HTTP status
-  const method = res.config ? res.config.method : "Not found";
-  const route =
-    res.request && res.request.responseURL
-      ? res.request.responseURL
-      : res.config?.url || "Not found";
-  const body =
-    method && method.toUpperCase() !== "POST"
-      ? null
-      : res.request && res.request.data
-        ? res.request.data
-        : res.config?.data || {};
+    const res = props.response
+    const httpStatus =
+        res.request && res.request.status ? res.request.status : res.status // HTTP status
+    const method = res.config ? res.config.method : 'Not found'
+    const route =
+        res.request && res.request.responseURL
+            ? res.request.responseURL
+            : res.config?.url || 'Not found'
+    const body =
+        method && method.toUpperCase() !== 'POST'
+            ? null
+            : res.request && res.request.data
+              ? res.request.data
+              : res.config?.data || {}
 
-  const apiStatus: number | null =
-    !isAxiosError(res) && res.data
-      ? res.data.condition && res.data.condition
-      : res.status || null;
-  // ! Somehow in office it returns a fucked up object (because of returned data of BE with error reason in it) - so just dont log it...
-  // const apiResponse = !isAxiosError(res) && res.data ? res.data : "Not found";
+    const apiStatus: number | null =
+        !isAxiosError(res) && res.data
+            ? res.data.condition && res.data.condition
+            : res.status || null
+    // ! Somehow in office it returns a fucked up object (because of returned data of BE with error reason in it) - so just dont log it...
+    // const apiResponse = !isAxiosError(res) && res.data ? res.data : "Not found";
 
-  return {
-    reason: props.reason
-      ? props.reason
-      : apiStatus && apiStatus > 299
-        ? "Something went wrong in the request - Expected > 299 API status but got something different"
-        : "Unknown",
-    apiStatus: apiStatus || null,
-    httpStatus,
-    isRequestErrorObject: true,
-    response: {
-      method,
-      route,
-      body: props.isSecurityBreach ? "SECURITY CONDITION" : body,
-      apiStatus,
-      raw: props.isSecurityBreach ? "SECURITY CONDITION" : res,
-    },
-  };
+    return {
+        reason: props.reason
+            ? props.reason
+            : apiStatus && apiStatus > 299
+              ? 'Something went wrong in the request - Expected > 299 API status but got something different'
+              : 'Unknown',
+        apiStatus: apiStatus || null,
+        httpStatus,
+        isRequestErrorObject: true,
+        response: {
+            method,
+            route,
+            body: props.isSecurityBreach ? 'SECURITY CONDITION' : body,
+            apiStatus,
+            raw: props.isSecurityBreach ? 'SECURITY CONDITION' : res,
+        },
+    }
 }
 
 /**
@@ -514,77 +482,77 @@ export function getRequestErrorObject(props: {
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AxiosCombinedResponse<T = any> = AxiosResponse<ApiResponse<T>>;
+export type AxiosCombinedResponse<T = any> = AxiosResponse<ApiResponse<T>>
 
 export interface RequestErrorObject {
-  reason: string;
-  apiStatus: number | null;
-  httpStatus: number | null;
-  response: {
-    method?: string;
-    route: string;
-    body: object | string;
-    apiStatus: number | null;
-    raw: object | string;
-    response?: ApiResponse;
-  } | null;
-  isRequestErrorObject: true;
+    reason: string
+    apiStatus: number | null
+    httpStatus: number | null
+    response: {
+        method?: string
+        route: string
+        body: object | string
+        apiStatus: number | null
+        raw: object | string
+        response?: ApiResponse
+    } | null
+    isRequestErrorObject: true
 }
 
 interface HandleDebugLogsProps extends RequestHandlerProps {
-  status: number;
-  route: string;
+    status: number
+    route: string
 }
 
 interface RequestHandlerProps {
-  response: AxiosError | AxiosCombinedResponse;
-  isSecurityBreach?: boolean;
-  hideDebugLogs?: boolean;
-  additionalTitleLog?: string;
-  onResponse?: (res: AxiosError | AxiosCombinedResponse) => void;
-  transformResponseData?: (res: AxiosCombinedResponse) => unknown | null;
-  information?: { [key: string]: unknown }; // Log extra client states for more information
+    response: AxiosError | AxiosCombinedResponse
+    isSecurityBreach?: boolean
+    hideDebugLogs?: boolean
+    additionalTitleLog?: string
+    onResponse?: (res: AxiosError | AxiosCombinedResponse) => void
+    transformResponseData?: (res: AxiosCombinedResponse) => unknown | null
+    information?: { [key: string]: unknown } // Log extra client states for more information
 }
 
 export interface AxiosRequestProps extends Omit<
-  RequestHandlerProps,
-  "response"
+    RequestHandlerProps,
+    'response'
 > {
-  config?: AxiosRequestConfig | undefined;
-  route: string;
-  body?: { [key: string]: unknown };
+    config?: AxiosRequestConfig | undefined
+    route: string
+    body?: { [key: string]: unknown }
 }
 
 type MyResponseClientLogs = {
-  response: AxiosError;
-  information: RequestHandlerProps["information"];
-};
+    response: AxiosError
+    information: RequestHandlerProps['information']
+}
 
 export interface ApiResponse<T = unknown> {
-  data: T;
-  condition: number;
-  details: string | null;
-  isDataCompressed: boolean;
-  reflection: unknown;
+    data: T
+    condition: number
+    details: string | null
+    isDataCompressed: boolean
+    reflection: unknown
 }
 
 interface RequestLogProps {
-  ["📡 request"]: {
-    method: string | null;
-    route: string;
-    body?: object;
-  };
-  ["📩 response"]: {
-    httpStatus: number;
-    apiStatus: number | null | undefined;
-    apiResponse: unknown;
-  };
-  ["🔍 information"]?: HandleDebugLogsProps["information"];
-  ["🛠️ settings"]: {
-    transformResponseData: string | null;
-    onResponse: string | null;
-    project: string;
-    hideDebugLogs: boolean | undefined;
-    log?: string;
-  };
+    ['📡 request']: {
+        method: string | null
+        route: string
+        body?: object
+    }
+    ['📩 response']: {
+        httpStatus: number
+        apiStatus: number | null | undefined
+        apiResponse: unknown
+    }
+    ['🔍 information']?: HandleDebugLogsProps['information']
+    ['🛠️ settings']: {
+        transformResponseData: string | null
+        onResponse: string | null
+        project: string
+        hideDebugLogs: boolean | undefined
+        log?: string
+    }
 }
